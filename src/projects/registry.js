@@ -1,5 +1,5 @@
-import { pacmanClockProject } from "./pacmanclock/adapter.js";
-import { pongClockProject } from "./pongclock/adapter.js";
+import { pacmanClockProject } from "./pacmanclock/adapter.js?v=20261016";
+import { pongClockProject } from "./pongclock/adapter.js?v=20261016";
 
 const projects = [pacmanClockProject, pongClockProject];
 

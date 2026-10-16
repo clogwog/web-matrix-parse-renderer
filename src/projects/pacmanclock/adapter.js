@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js";
-import { createSession } from "../../cpp/interpreter.js";
-import { MatrixProject } from "../project.js";
-import { PACMAN_ENTRIES, loadPacmanFiles } from "./load.js";
+import { compileSources } from "../../cpp/compile.js?v=20261016";
+import { createSession } from "../../cpp/interpreter.js?v=20261016";
+import { MatrixProject } from "../project.js?v=20261016";
+import { PACMAN_ENTRIES, loadPacmanFiles } from "./load.js?v=20261016";
 
 const DESCRIPTION = "Random 5×5 maze, HH:MM at the top, and a 5×5 Pac-Man that eats pellets. Interpreted from clogwog/pacmanclock.";
 

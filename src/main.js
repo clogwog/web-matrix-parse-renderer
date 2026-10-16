@@ -1,6 +1,6 @@
-import { createClock } from "./matrix/clock.js";
-import { findProject, listProjects } from "./projects/registry.js";
-import { PanelView } from "./render/panel-view.js";
+import { createClock } from "./matrix/clock.js?v=20261016";
+import { findProject, listProjects } from "./projects/registry.js?v=20261016";
+import { PanelView } from "./render/panel-view.js?v=20261016";
 
 const projectSelect = document.querySelector("#project");
 const description = document.querySelector("#description");

@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js";
-import { createSession } from "../../cpp/interpreter.js";
-import { MatrixProject } from "../project.js";
-import { PONG_ENTRIES, loadPongFiles } from "./load.js";
+import { compileSources } from "../../cpp/compile.js?v=20261016";
+import { createSession } from "../../cpp/interpreter.js?v=20261016";
+import { MatrixProject } from "../project.js?v=20261016";
+import { PONG_ENTRIES, loadPongFiles } from "./load.js?v=20261016";
 
 const DESCRIPTION = "Auto-playing pong. The score is the local time, drawn from pongnumberfont.bdf, and a normal-distribution bar along the bottom is the second hand. Interpreted from clogwog/pongclock.";
 const FRAME_MS = 25;

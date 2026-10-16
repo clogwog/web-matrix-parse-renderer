@@ -1,3 +1,5 @@
+import { withAssetVersion } from "../../version.js?v=20261016";
+
 const FILES = [
     "sources/pongclock.cc",
     "sources/pongnumberfont.bdf",
@@ -50,7 +52,7 @@ async function readProjectFile(relative)
         const { fileURLToPath } = await import("node:url");
         return readFile(fileURLToPath(url), "utf8");
     }
-    const response = await fetch(url);
+    const response = await fetch(withAssetVersion(url));
     if (!response.ok)
     {
         throw new Error("Failed to fetch " + relative + " (" + response.status + ")");
