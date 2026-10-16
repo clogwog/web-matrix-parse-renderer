@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { findProject, listProjects, registerProject } from "../src/projects/registry.js";
 
-test("registry exposes pacmanclock and accepts another project", () =>
+test("registry lists pacmanclock and pongclock and accepts another project", () =>
 {
     const before = listProjects();
-    assert.equal(before.length, 1);
+    assert.equal(before.length, 2);
     assert.equal(before[0].id, "pacmanclock");
+    assert.equal(before[1].id, "pongclock");
     assert.equal(findProject("missing").id, "pacmanclock");
 
     const extra = {
@@ -30,5 +31,7 @@ test("registry exposes pacmanclock and accepts another project", () =>
         }
     });
     assert.equal(findProject("extra").title, "Extra again");
-    assert.equal(listProjects().length, 2);
+    assert.equal(listProjects().length, 3);
+    assert.equal(listProjects()[0].id, "pacmanclock");
+    assert.equal(listProjects()[1].id, "pongclock");
 });

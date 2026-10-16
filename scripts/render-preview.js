@@ -3,16 +3,19 @@ import { compileSources } from "../src/cpp/compile.js";
 import { createSession } from "../src/cpp/interpreter.js";
 import { createClock } from "../src/matrix/clock.js";
 import { PACMAN_ENTRIES, loadPacmanFiles } from "../src/projects/pacmanclock/load.js";
+import { PONG_ENTRIES, loadPongFiles } from "../src/projects/pongclock/load.js";
 import { encodePng } from "../src/render/encode-png.js";
 import { rasterPanel } from "../src/render/raster-panel.js";
 
-const files = await loadPacmanFiles();
-const program = compileSources(files, PACMAN_ENTRIES);
+const pacmanFiles = await loadPacmanFiles();
+const pacmanProgram = compileSources(pacmanFiles, PACMAN_ENTRIES);
+const pongFiles = await loadPongFiles();
+const pongProgram = compileSources(pongFiles, PONG_ENTRIES);
 
-async function shoot(name, date, steps, stepMs)
+async function shoot(name, program, date, steps, stepMs, files)
 {
     const clock = createClock(date.getTime());
-    const session = createSession(program, { clock });
+    const session = createSession(program, { clock, files });
     let frame = null;
     for (let i = 0; i < steps; i++)
     {
@@ -26,5 +29,6 @@ async function shoot(name, date, steps, stepMs)
 }
 
 await mkdir(new URL("../docs/preview/", import.meta.url), { recursive: true });
-await shoot("pacmanclock-1435.png", new Date(2026, 9, 16, 14, 35, 8), 1, 0);
-await shoot("pacmanclock-1435-chomp.png", new Date(2026, 9, 16, 14, 35, 8), 8, 90);
+await shoot("pacmanclock-1435.png", pacmanProgram, new Date(2026, 9, 16, 14, 35, 8), 1, 0, pacmanFiles);
+await shoot("pacmanclock-1435-chomp.png", pacmanProgram, new Date(2026, 9, 16, 14, 35, 8), 8, 90, pacmanFiles);
+await shoot("pongclock-1435.png", pongProgram, new Date(2026, 9, 16, 14, 35, 8), 1, 0, pongFiles);

@@ -8,6 +8,7 @@ const clockLabel = document.querySelector("#clock");
 const statusLabel = document.querySelector("#status");
 const canvas = document.querySelector("#panel");
 const pauseButton = document.querySelector("#pause");
+const backLink = document.querySelector(".back");
 
 const view = new PanelView(canvas);
 const clock = createClock(null);
@@ -121,6 +122,12 @@ pauseButton.addEventListener("click", function ()
         fpsStamp = performance.now();
         frames = 0;
     }
+});
+
+backLink.addEventListener("click", function (event)
+{
+    event.preventDefault();
+    history.back();
 });
 
 projectSelect.addEventListener("change", function ()

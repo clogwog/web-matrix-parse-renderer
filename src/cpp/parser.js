@@ -86,10 +86,15 @@ function seedTypes()
         "size_t",
         "time_t",
         "string",
+        "std::string",
         "vector",
         "GPIO",
         "RGBMatrix",
         "Canvas",
+        "rgb_matrix::Font",
+        "rgb_matrix::Color",
+        "Font",
+        "Color",
         "FrameCanvas",
         "timeval",
         "tm",
@@ -151,6 +156,27 @@ export function createParser(tokens, knownTypes)
         return consume().value;
     }
 
+    function peekQualifiedName()
+    {
+        if (tok().type !== "ident")
+        {
+            return null;
+        }
+        let name = tok().value;
+        let i = pos + 1;
+        while (tokens[i] && tokens[i].value === "::")
+        {
+            const next = tokens[i + 1];
+            if (!next || next.type !== "ident")
+            {
+                return name;
+            }
+            name += "::" + next.value;
+            i += 2;
+        }
+        return name;
+    }
+
     function isTypeKeyword(value)
     {
         return TYPE_KEYWORDS.has(value);
@@ -197,6 +223,14 @@ export function createParser(tokens, knownTypes)
         {
             return true;
         }
+        if (t.type === "ident")
+        {
+            const qualified = peekQualifiedName();
+            if (qualified && known.has(qualified))
+            {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -209,6 +243,17 @@ export function createParser(tokens, knownTypes)
         const name = tokens[pos + 1];
         const brace = tokens[pos + 2];
         return name && name.type === "ident" && brace && brace.value === "{";
+    }
+
+    function isForwardDecl()
+    {
+        if (!(at("class") || at("struct")))
+        {
+            return false;
+        }
+        const name = tokens[pos + 1];
+        const semi = tokens[pos + 2];
+        return name && name.type === "ident" && semi && semi.value === ";";
     }
 
     function isCtorDefAhead()
@@ -343,7 +388,7 @@ export function createParser(tokens, knownTypes)
             {
                 break;
             }
-            if (at("struct") || at("class") || (tok().type === "ident" && (isTypeKeyword(tok().value) || isKnownTypeName(tok().value) || tok().value === "vector" || tok().value === "string" || tok().value === "unsigned" || tok().value === "signed" || tok().value === "long")))
+            if (at("struct") || at("class") || (tok().type === "ident" && (isTypeKeyword(tok().value) || isKnownTypeName(tok().value) || tok().value === "vector" || tok().value === "string" || tok().value === "unsigned" || tok().value === "signed" || tok().value === "long" || known.has(peekQualifiedName()))))
             {
                 spec.type = parseTypeNode();
                 sawType = true;
@@ -511,12 +556,19 @@ export function createParser(tokens, knownTypes)
                         decl = parseDeclarator();
                     }
                 }
+                let defaultExpr = null;
+                if (at("="))
+                {
+                    consume();
+                    defaultExpr = parseAssignExpr();
+                }
                 params.push({
                     name: decl.name,
                     typeName: typeToString(spec.type),
                     typeArgs: spec.type && spec.type.args ? spec.type.args : null,
                     pointer: decl.pointer,
                     isRef: decl.isRef,
+                    default: defaultExpr,
                     line: tok().line
                 });
                 if (at(","))
@@ -1313,6 +1365,16 @@ export function createParser(tokens, knownTypes)
             if (isCtorDefAhead())
             {
                 decls.push(parseConstructorDef());
+                continue;
+            }
+            if (isForwardDecl())
+            {
+                const line = tok().line;
+                const structKind = consume().value;
+                const name = consumeIdent();
+                known.add(name);
+                expect(";");
+                decls.push({ kind: "forward", structKind, name, line });
                 continue;
             }
             if (isClassDefAhead())

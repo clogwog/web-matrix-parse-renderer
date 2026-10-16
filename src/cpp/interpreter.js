@@ -1,5 +1,6 @@
 import { VirtualMatrix } from "../matrix/virtual-matrix.js";
 import { localParts } from "../matrix/clock.js";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -65,6 +66,19 @@ function num(value)
     return Number(value) || 0;
 }
 
+function stringText(value)
+{
+    if (typeof value === "string")
+    {
+        return value;
+    }
+    if (value && value.__class === "string")
+    {
+        return value.s;
+    }
+    return null;
+}
+
 function isFloat(value)
 {
     return !!(value && typeof value === "object" && value.__float);
@@ -119,13 +133,16 @@ function applyBin(op, left, right)
     {
         return Math.trunc(a % b);
     }
-    if (op === "==")
+    if (op === "==" || op === "!=")
     {
-        return a === b;
-    }
-    if (op === "!=")
-    {
-        return a !== b;
+        const leftText = stringText(left);
+        const rightText = stringText(right);
+        if (leftText != null && rightText != null)
+        {
+            const same = leftText === rightText;
+            return op === "==" ? same : !same;
+        }
+        return op === "==" ? a === b : a !== b;
     }
     if (op === "<")
     {
@@ -333,17 +350,51 @@ function lookupMethod(ctx, className, name)
     return cls.methods.get(name) || null;
 }
 
+function textOf(value)
+{
+    if (value == null)
+    {
+        return "";
+    }
+    if (typeof value === "string")
+    {
+        return value;
+    }
+    if (value && value.__class === "string")
+    {
+        return value.s;
+    }
+    return String(value);
+}
+
+function isStringType(typeName)
+{
+    return typeName === "string" || typeName === "std::string";
+}
+
 function makeString(text)
 {
-    const value = text == null ? "" : String(text);
-    return {
+    const obj = {
         __class: "string",
-        s: value,
-        c_str()
-        {
-            return value;
-        }
+        s: text == null ? "" : String(text)
     };
+    obj.c_str = function ()
+    {
+        return obj.s;
+    };
+    obj.length = function ()
+    {
+        return obj.s.length;
+    };
+    obj.insert = function (pos, count, ch)
+    {
+        const index = Math.max(0, Math.trunc(num(pos)));
+        const copies = Math.max(0, Math.trunc(num(count)));
+        const piece = String.fromCharCode(Math.trunc(num(ch)) & 255).repeat(copies);
+        obj.s = obj.s.slice(0, index) + piece + obj.s.slice(index);
+        return obj;
+    };
+    return obj;
 }
 
 export function linkProgram(units)
@@ -382,7 +433,12 @@ export function linkProgram(units)
                     }
                     else if (!cls.fields.some(function (field) { return field.name === decl.name; }))
                     {
-                        cls.fields.push({ name: decl.name, typeName: member.typeName });
+                        cls.fields.push({
+                            name: decl.name,
+                            typeName: member.typeName,
+                            pointer: decl.pointer || 0,
+                            init: decl.init || null
+                        });
                     }
                 }
             }
@@ -476,6 +532,7 @@ export function createSession(program, options)
         functions: new Map(program.functions),
         clock: opts.clock,
         now: opts.clock ? opts.clock.now() : Date.now(),
+        files: opts.files || null,
         argc: opts.argc == null ? 1 : opts.argc,
         argv: opts.argv || ["pacmanclock"],
         line: 0,
@@ -631,6 +688,46 @@ function installHosts(ctx)
         "std::abs": absFn,
         "std::max": maxFn,
         "std::stoi": stoi,
+        "std::exp": host(function (_this, args)
+        {
+            return asFloat(Math.exp(num(args[0])));
+        }),
+        "std::to_string": host(function (_this, args)
+        {
+            const value = args[0];
+            if (isFloat(value))
+            {
+                return makeString(String(value.v));
+            }
+            return makeString(String(Math.trunc(num(value))));
+        }),
+        strcpy: host(function (_this, args)
+        {
+            const dest = unwrap(args[0]);
+            const text = textOf(args[1]);
+            if (Array.isArray(dest))
+            {
+                let i = 0;
+                for (; i < text.length && i < dest.length; i++)
+                {
+                    dest[i] = text.charCodeAt(i);
+                }
+                if (i < dest.length)
+                {
+                    dest[i] = 0;
+                }
+            }
+            return dest;
+        }),
+        getuid: host(function ()
+        {
+            return 0;
+        }),
+        usleep: host(function ()
+        {
+            publishMatrixFrame(ctx);
+            return 0;
+        }),
         fmodf,
         fabsf,
         syslog: noop,
@@ -658,6 +755,41 @@ function installHosts(ctx)
     {
         return constructMatrix(ctx, args);
     });
+    ctx.hostCtors.set("rgb_matrix::Font", function ()
+    {
+        return makeFont(ctx);
+    });
+    ctx.hostCtors.set("Font", function ()
+    {
+        return makeFont(ctx);
+    });
+    const colorCtor = function (args)
+    {
+        return {
+            __class: "rgb_matrix::Color",
+            r: num(args[0]),
+            g: num(args[1]),
+            b: num(args[2])
+        };
+    };
+    ctx.hostCtors.set("rgb_matrix::Color", colorCtor);
+    ctx.hostCtors.set("Color", colorCtor);
+    const drawText = host(function (_this, args)
+    {
+        const canvas = unwrap(args[0]);
+        const font = unwrap(args[1]);
+        const color = args[4] || { r: 255, g: 255, b: 255 };
+        if (!canvas || typeof canvas.SetPixel !== "function" || !font)
+        {
+            return 0;
+        }
+        return drawBdfText(function (px, py, r, g, b)
+        {
+            canvas.SetPixel(px, py, r, g, b);
+        }, font, num(args[2]), num(args[3]), num(color.r), num(color.g), num(color.b), textOf(args[5]));
+    });
+    ctx.functions.set("rgb_matrix::DrawText", drawText);
+    ctx.functions.set("DrawText", drawText);
 }
 
 function fillValue(dest, value)
@@ -729,23 +861,100 @@ function createCanvas(width, height)
     };
 }
 
+function lookupSource(ctx, path)
+{
+    if (!ctx.files || path == null)
+    {
+        return null;
+    }
+    const raw = String(path);
+    const keys = [raw, raw.replace(/^\.\//, "")];
+    for (const key of keys)
+    {
+        if (ctx.files.has(key))
+        {
+            return ctx.files.get(key);
+        }
+    }
+    return null;
+}
+
+function makeFont(ctx)
+{
+    return {
+        __class: "rgb_matrix::Font",
+        baseLine: 0,
+        fontHeight: -1,
+        glyphs: new Map(),
+        LoadFont(path)
+        {
+            const text = lookupSource(ctx, textOf(path));
+            if (text == null)
+            {
+                return false;
+            }
+            const parsed = parseBdf(text);
+            this.baseLine = parsed.baseline;
+            this.fontHeight = parsed.height;
+            this.glyphs = parsed.glyphs;
+            return true;
+        },
+        baseline()
+        {
+            return this.baseLine;
+        },
+        height()
+        {
+            return this.fontHeight;
+        }
+    };
+}
+
+function publishMatrixFrame(ctx)
+{
+    if (!ctx.matrix)
+    {
+        return;
+    }
+    const snap = ctx.matrix.active.__matrix.snapshot();
+    snap.brightness = ctx.matrix.brightness;
+    ctx.pendingFrame = snap;
+    ctx.frameReady = true;
+}
+
+function matrixShape(args)
+{
+    const second = args[1];
+    const opts = second && second.__ptr ? second.lv.get() : second;
+    if (opts && typeof opts === "object")
+    {
+        return {
+            rows: num(opts.rows) || 32,
+            cols: num(opts.cols) || 32,
+            chain: num(opts.chain_length) || 1,
+            brightness: opts.brightness != null ? num(opts.brightness) : 100
+        };
+    }
+    return {
+        rows: num(second) || 32,
+        cols: 32,
+        chain: num(args[2]) || 1,
+        brightness: 100
+    };
+}
+
 function constructMatrix(ctx, args)
 {
-    const optsArg = args[1];
-    const opts = optsArg && optsArg.__ptr ? optsArg.lv.get() : optsArg;
-    const rows = num(opts && opts.rows) || 32;
-    const cols = num(opts && opts.cols) || 32;
-    const chain = num(opts && opts.chain_length) || 1;
-    const width = cols * chain;
-    const height = rows;
+    const shape = matrixShape(args);
+    const width = shape.cols * shape.chain;
+    const height = shape.rows;
     const front = createCanvas(width, height);
     const back = createCanvas(width, height);
     const matrix = {
         __class: "RGBMatrix",
         width,
         height,
-        brightness: opts && opts.brightness != null ? num(opts.brightness) : 100,
-        options: opts,
+        brightness: shape.brightness,
         active: front,
         spare: back,
         CreateFrameCanvas()
@@ -764,9 +973,17 @@ function constructMatrix(ctx, args)
             ctx.frameReady = true;
             return returned;
         },
+        SetPixel(x, y, r, g, b)
+        {
+            this.active.SetPixel(x, y, r, g, b);
+        },
         Clear()
         {
             this.active.Clear();
+        },
+        Fill(r, g, b)
+        {
+            this.active.Fill(r, g, b);
         }
     };
     ctx.matrix = matrix;
@@ -1061,7 +1278,12 @@ function defineLocalClass(node, ctx)
         {
             if (!cls.fields.some(function (field) { return field.name === decl.name; }))
             {
-                cls.fields.push({ name: decl.name, typeName: member.typeName });
+                cls.fields.push({
+                    name: decl.name,
+                    typeName: member.typeName,
+                    pointer: decl.pointer || 0,
+                    init: decl.init || null
+                });
             }
         }
     }
@@ -1106,6 +1328,18 @@ function* makeInit(node, decl, env, ctx)
     if (decl.arrayDims && decl.arrayDims.length)
     {
         return yield* allocArray(node.typeName, decl.arrayDims, decl.init, env, ctx);
+    }
+    if (isStringType(node.typeName))
+    {
+        if (decl.ctorArgs)
+        {
+            return yield* construct(node.typeName, decl.ctorArgs, env, ctx);
+        }
+        if (decl.init)
+        {
+            return makeString(textOf(yield* evalExpr(decl.init, env, ctx)));
+        }
+        return makeString("");
     }
     if (decl.ctorArgs)
     {
@@ -1229,7 +1463,7 @@ function makeInstance(ctx, typeName)
 
 function* construct(typeName, argNodes, env, ctx)
 {
-    if (typeName === "string")
+    if (isStringType(typeName))
     {
         const args = [];
         for (const arg of argNodes)
@@ -1237,8 +1471,7 @@ function* construct(typeName, argNodes, env, ctx)
             args.push(yield* evalExpr(arg, env, ctx));
         }
         const raw = args[0];
-        const text = raw && raw.s != null ? raw.s : raw == null ? "" : String(raw);
-        return makeString(text);
+        return makeString(raw == null ? "" : textOf(raw));
     }
     if (typeName === "vector")
     {
@@ -1255,11 +1488,56 @@ function* construct(typeName, argNodes, env, ctx)
     }
     const obj = makeInstance(ctx, typeName);
     const cls = ctx.classes.get(typeName);
+    if (cls)
+    {
+        yield* applyFieldInits(obj, cls, ctx);
+    }
     if (cls && cls.ctor && cls.ctor.body)
     {
         yield* callUser(cls.ctor, obj, argNodes, env, ctx);
     }
     return obj;
+}
+
+function* applyFieldInits(obj, cls, ctx)
+{
+    const scope = new Scope(ctx.global, "func", ctx);
+    scope.thisObj = obj;
+    for (const field of cls.fields)
+    {
+        if (!field.init)
+        {
+            continue;
+        }
+        const value = yield* evalExpr(field.init, scope, ctx);
+        obj.__fields[field.name] = coerceField(field, value);
+    }
+}
+
+function coerceField(field, value)
+{
+    if (field.pointer)
+    {
+        return value;
+    }
+    const typeName = field.typeName;
+    if (typeName === "float" || typeName === "double")
+    {
+        return asFloat(num(value));
+    }
+    if (typeName === "bool")
+    {
+        return truthy(value);
+    }
+    if (isStringType(typeName))
+    {
+        return makeString(textOf(value));
+    }
+    if (typeName === "int" || typeName === "char" || typeName === "short" || typeName === "long" || typeName === "unsigned" || typeName === "unsigned int" || typeName === "size_t" || typeName === "time_t" || typeName === "uint8_t")
+    {
+        return Math.trunc(num(value));
+    }
+    return value;
 }
 
 function* callUser(fn, thisObj, argNodes, callerEnv, ctx)
@@ -1278,10 +1556,16 @@ function* callUser(fn, thisObj, argNodes, callerEnv, ctx)
             }
             continue;
         }
+        const missing = !argNodes[i];
         if (param.isRef)
         {
             const lv = yield* evalLValue(argNodes[i], callerEnv, ctx);
             scope.defineRef(param.name, lv);
+        }
+        else if (missing && param.default)
+        {
+            const value = yield* evalExpr(param.default, callerEnv, ctx);
+            scope.define(param.name, coerceAssign(null, value));
         }
         else
         {
@@ -1320,6 +1604,10 @@ function coerceAssign(current, value)
     if (value && value.__struct)
     {
         return Object.assign({ __struct: value.__struct }, value);
+    }
+    if (value && value.__class === "string")
+    {
+        return makeString(value.s);
     }
     return value;
 }
@@ -1584,6 +1872,10 @@ function* evalExpr(node, env, ctx)
 
 function assignInto(ctx, current, value)
 {
+    if (current && current.__class === "string")
+    {
+        return makeString(textOf(value));
+    }
     if (value && value.__brace)
     {
         const typeName = current && current.__struct;
@@ -1820,6 +2112,15 @@ function* evalLValue(node, env, ctx)
 
 function* evalCall(node, env, ctx)
 {
+    if (node.callee.kind === "ident" && (node.callee.name === "std::swap" || node.callee.name === "swap"))
+    {
+        const left = yield* evalLValue(node.args[0], env, ctx);
+        const right = yield* evalLValue(node.args[1], env, ctx);
+        const tmp = left.get();
+        left.set(right.get());
+        right.set(tmp);
+        return 0;
+    }
     let callee;
     if (node.callee.kind === "member")
     {

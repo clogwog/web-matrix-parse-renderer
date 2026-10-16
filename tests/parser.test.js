@@ -161,6 +161,52 @@ test("pacmanclock frame uses the real clock and moves pacman", async () =>
     assert.notDeepEqual(start, moved);
 });
 
+test("default arguments and in-class initializers run before the constructor body", () =>
+{
+    const source = [
+        "class Box",
+        "{",
+        "public:",
+        "    Box(int v) { this->v = v; }",
+        "    int v;",
+        "    int bright = 180;",
+        "    int seen = bright;",
+        "    void Nudge(int steps = 2) { v = v + steps; }",
+        "};",
+        "int main()",
+        "{",
+        "    Box b(5);",
+        "    b.Nudge();",
+        "    SetPixel(0, 0, b.v, b.bright, b.seen);",
+        "    Swap();",
+        "}"
+    ].join("\n");
+    const files = new Map([["main.cc", source]]);
+    const program = compileSources(files, ["main.cc"]);
+    const calls = [];
+    program.functions.set("SetPixel", {
+        __host: true,
+        __call(_this, args)
+        {
+            calls.push(args);
+            return 0;
+        }
+    });
+    program.functions.set("Swap", {
+        __host: true,
+        __call(_this, _args, ctx)
+        {
+            ctx.frameReady = true;
+            ctx.pendingFrame = { calls: calls.slice() };
+            return 0;
+        }
+    });
+    const session = createSession(program, { clock: createClock(0) });
+    const step = session.step(0);
+    assert.equal(step.done, false);
+    assert.deepEqual(calls[0], [0, 0, 7, 180, 180]);
+});
+
 function countColor(frame, r, g, b)
 {
     let n = 0;
