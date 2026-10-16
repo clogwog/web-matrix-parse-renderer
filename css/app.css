@@ -1,0 +1,194 @@
+:root
+{
+    color-scheme: dark;
+    --bg: #090a0e;
+    --ink: #f4f1e8;
+    --muted: #a4a8b4;
+    --line: #2c3140;
+    --accent: #ffd84a;
+    --panel: #12141b;
+}
+
+*
+{
+    box-sizing: border-box;
+}
+
+html, body
+{
+    margin: 0;
+    min-height: 100%;
+    background:
+        radial-gradient(1200px 500px at 20% -10%, #1c2030 0%, transparent 55%),
+        var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, "Segoe UI", sans-serif;
+}
+
+body
+{
+    padding: 28px 22px 48px;
+}
+
+.top
+{
+    max-width: 1100px;
+    margin: 0 auto 22px;
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-end;
+}
+
+h1
+{
+    margin: 0 0 6px;
+    font-size: 28px;
+    letter-spacing: -0.03em;
+    font-weight: 650;
+}
+
+h1 span
+{
+    color: var(--accent);
+}
+
+.lede
+{
+    margin: 0;
+    max-width: 46rem;
+    color: var(--muted);
+    line-height: 1.45;
+}
+
+.layout
+{
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: auto minmax(240px, 320px);
+    gap: 28px;
+    align-items: start;
+}
+
+.stage
+{
+    display: flex;
+    justify-content: center;
+}
+
+#panel
+{
+    width: min(720px, calc(100vw - 48px));
+    height: auto;
+    border-radius: 22px;
+    background: #07080c;
+    box-shadow:
+        0 0 0 1px #000,
+        0 24px 60px rgba(0, 0, 0, 0.45);
+}
+
+.side
+{
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 18px 14px;
+}
+
+label
+{
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+select, button
+{
+    font: inherit;
+    color: var(--ink);
+    background: #0c0e14;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+
+select
+{
+    width: 100%;
+    padding: 10px 12px;
+}
+
+#description
+{
+    color: var(--muted);
+    line-height: 1.45;
+    min-height: 4.4em;
+}
+
+.clock
+{
+    font-variant-numeric: tabular-nums;
+    font-size: 40px;
+    letter-spacing: 0.04em;
+    margin: 8px 0 4px;
+    color: var(--accent);
+}
+
+#status
+{
+    color: var(--muted);
+    font-size: 14px;
+    min-height: 2.6em;
+}
+
+button
+{
+    padding: 8px 14px;
+    cursor: pointer;
+}
+
+button:hover
+{
+    border-color: var(--accent);
+}
+
+details
+{
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+summary
+{
+    cursor: pointer;
+    color: var(--ink);
+}
+
+a
+{
+    color: var(--accent);
+}
+
+@media (max-width: 860px)
+{
+    .top, .layout
+    {
+        display: block;
+    }
+
+    .side
+    {
+        margin-top: 18px;
+    }
+
+    .stage
+    {
+        overflow-x: auto;
+        justify-content: flex-start;
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "name": "web-matrix-parse-renderer",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "test": "node --test tests/*.js",
+        "start": "python3 -m http.server 8080",
+        "preview": "node scripts/render-preview.js"
+    }
+}

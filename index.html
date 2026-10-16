@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Matrix bench — Pac-Man Clock</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+    <header class="top">
+        <div>
+            <h1>Matrix bench <span>32×32</span></h1>
+            <p class="lede">A browser panel for Tom’s RGB matrix clocks. Pac-Man Clock is executed from the C++ sources: maze, pellets, chomp, and the HH:MM digits all come from that program, paced by this computer’s local time.</p>
+        </div>
+    </header>
+    <main class="layout">
+        <section class="stage">
+            <canvas id="panel" width="720" height="720" aria-label="32 by 32 RGB LED matrix"></canvas>
+        </section>
+        <aside class="side">
+            <label for="project">Project</label>
+            <select id="project"></select>
+            <p id="description"></p>
+            <p class="clock" id="clock">--:--:--</p>
+            <p id="status">Loading sources…</p>
+            <button id="pause" type="button">Pause</button>
+            <details>
+                <summary>What this run is doing</summary>
+                <p>The page parses <code>pacmanclock.cc</code> and <code>digit.cc</code>, then interprets the subset those files use: <code>SetPixel</code>, the 3×5 digit tables, maze generation, pellet rules, and the 80&nbsp;ms Pac-Man step. <code>SwapOnVSync</code> publishes one frame. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
+                <p>Driver brightness in the source is 50. The preview shows the raw <code>SetPixel</code> colours. The physical panel dims those in the row scan.</p>
+                <p><a href="https://github.com/clogwog/pacmanclock">clogwog/pacmanclock</a></p>
+            </details>
+        </aside>
+    </main>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
