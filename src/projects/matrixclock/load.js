@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261017";
+import { withAssetVersion } from "../../version.js?v=20261018";
 
 const FILES = [
     "sources/matrixclock.cc",

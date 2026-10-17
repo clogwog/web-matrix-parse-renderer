@@ -1,7 +1,7 @@
-import { lex } from "./lexer.js?v=20261017";
-import { expandMacros, preprocess } from "./preprocessor.js?v=20261017";
-import { parseTokens, seedTypes } from "./parser.js?v=20261017";
-import { linkProgram } from "./interpreter.js?v=20261017";
+import { lex } from "./lexer.js?v=20261018";
+import { expandMacros, preprocess } from "./preprocessor.js?v=20261018";
+import { parseTokens, seedTypes } from "./parser.js?v=20261018";
+import { linkProgram } from "./interpreter.js?v=20261018";
 
 export function compileSources(fileMap, entries)
 {

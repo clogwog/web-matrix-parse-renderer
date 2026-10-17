@@ -9,6 +9,10 @@ test("registry lists the three clocks and accepts another project", () =>
     assert.equal(before[0].id, "pacmanclock");
     assert.equal(before[1].id, "pongclock");
     assert.equal(before[2].id, "matrixclock");
+    assert.equal(before[0].repo, "https://github.com/clogwog/pacmanclock");
+    assert.equal(before[1].repo, "https://github.com/clogwog/pongclock");
+    assert.equal(before[2].repo, "https://github.com/clogwog/matrixclock");
+    assert.equal(before[0].thumb, "css/thumbs/pacmanclock.png");
     assert.equal(findProject("missing").id, "pacmanclock");
 
     const extra = {

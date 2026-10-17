@@ -1,14 +1,17 @@
-import { createClock } from "./matrix/clock.js?v=20261017";
-import { findProject, listProjects } from "./projects/registry.js?v=20261017";
-import { PanelView } from "./render/panel-view.js?v=20261017";
+import { BUILD_VERSION } from "./version.js?v=20261018";
+import { createClock } from "./matrix/clock.js?v=20261018";
+import { findProject, listProjects } from "./projects/registry.js?v=20261018";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261018";
+import { PanelView } from "./render/panel-view.js?v=20261018";
 
-const projectSelect = document.querySelector("#project");
 const description = document.querySelector("#description");
+const repoLink = document.querySelector("#repo");
 const clockLabel = document.querySelector("#clock");
 const statusLabel = document.querySelector("#status");
 const canvas = document.querySelector("#panel");
 const pauseButton = document.querySelector("#pause");
 const backLink = document.querySelector(".back");
+const projectGrid = document.querySelector("#project-grid");
 
 const view = new PanelView(canvas);
 const clock = createClock(null);
@@ -17,6 +20,8 @@ let paused = false;
 let frames = 0;
 let fpsStamp = performance.now();
 let fps = 0;
+let currentId = null;
+let bootToken = 0;
 
 function pad(n)
 {
@@ -29,15 +34,126 @@ function formatNow(ms)
     return pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds());
 }
 
+function projectIds()
+{
+    return listProjects().map(function (project)
+    {
+        return project.id;
+    });
+}
+
+function repoLabel(url)
+{
+    if (!url)
+    {
+        return "";
+    }
+    return url.replace(/^https:\/\/github\.com\//, "");
+}
+
+function thumbUrl(project)
+{
+    if (!project.thumb)
+    {
+        return "";
+    }
+    const join = project.thumb.indexOf("?") === -1 ? "?" : "&";
+    return project.thumb + join + "v=" + BUILD_VERSION;
+}
+
+function markSelected(id)
+{
+    const buttons = projectGrid.querySelectorAll(".project-icon");
+    for (const button of buttons)
+    {
+        const on = button.dataset.project === id;
+        button.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+}
+
+function writeProjectUrl(id, mode)
+{
+    const next = locationWithProject(window.location, id);
+    const current = window.location.pathname + window.location.search + window.location.hash;
+    if (next === current)
+    {
+        return;
+    }
+    const state = { project: id };
+    if (mode === "push")
+    {
+        history.pushState(state, "", next);
+        return;
+    }
+    history.replaceState(state, "", next);
+}
+
 function fillProjects()
 {
     const projects = listProjects();
     for (const project of projects)
     {
-        const option = document.createElement("option");
-        option.value = project.id;
-        option.textContent = project.title;
-        projectSelect.appendChild(option);
+        const tile = document.createElement("div");
+        tile.className = "project-tile";
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "project-icon";
+        button.dataset.project = project.id;
+        button.setAttribute("aria-pressed", "false");
+        button.setAttribute("aria-label", project.title);
+
+        const tipId = "project-tip-" + project.id;
+        button.setAttribute("aria-describedby", tipId);
+
+        if (project.thumb)
+        {
+            const img = document.createElement("img");
+            img.alt = "";
+            img.src = thumbUrl(project);
+            button.appendChild(img);
+        }
+
+        const tip = document.createElement("div");
+        tip.className = "project-pop";
+        tip.id = tipId;
+        tip.setAttribute("role", "tooltip");
+
+        const name = document.createElement("strong");
+        name.textContent = project.title;
+
+        const about = document.createElement("p");
+        about.textContent = project.description;
+
+        tip.appendChild(name);
+        tip.appendChild(about);
+
+        if (project.shows)
+        {
+            const shows = document.createElement("p");
+            shows.className = "project-shows";
+            shows.textContent = project.shows;
+            tip.appendChild(shows);
+        }
+
+        if (project.repo)
+        {
+            const link = document.createElement("a");
+            link.href = project.repo;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = repoLabel(project.repo);
+            tip.appendChild(link);
+        }
+
+        button.addEventListener("click", function ()
+        {
+            boot(project.id, "push");
+        });
+
+        tile.appendChild(button);
+        tile.appendChild(tip);
+        projectGrid.appendChild(tile);
     }
 }
 
@@ -51,15 +167,41 @@ function cancel(id)
     cancelAnimationFrame(id);
 }
 
-async function boot(id)
+async function boot(id, historyMode)
 {
+    const project = findProject(id);
+    if (!project)
+    {
+        return;
+    }
+    if (historyMode === "push" && project.id === currentId)
+    {
+        return;
+    }
+    if (historyMode == null && project.id === currentId)
+    {
+        markSelected(project.id);
+        return;
+    }
+
+    const token = ++bootToken;
     if (running)
     {
         running.stop();
         running = null;
     }
-    const project = findProject(id);
+    currentId = project.id;
+    markSelected(project.id);
     description.textContent = project.description;
+    if (project.repo)
+    {
+        repoLink.href = project.repo;
+        repoLink.textContent = repoLabel(project.repo);
+    }
+    if (historyMode)
+    {
+        writeProjectUrl(project.id, historyMode);
+    }
     statusLabel.textContent = "Starting " + project.title + "…";
     frames = 0;
     fpsStamp = performance.now();
@@ -75,7 +217,7 @@ async function boot(id)
             },
             onFrame(frame, meta)
             {
-                if (paused)
+                if (paused || token !== bootToken)
                 {
                     return;
                 }
@@ -96,18 +238,35 @@ async function boot(id)
             },
             onError(error)
             {
+                if (token !== bootToken)
+                {
+                    return;
+                }
                 statusLabel.textContent = "Interpreter error: " + error.message;
                 console.error(error);
             },
             onDone()
             {
+                if (token !== bootToken)
+                {
+                    return;
+                }
                 statusLabel.textContent = "Program finished.";
             }
         });
+        if (token !== bootToken)
+        {
+            handle.stop();
+            return;
+        }
         running = handle;
     }
     catch (error)
     {
+        if (token !== bootToken)
+        {
+            return;
+        }
         statusLabel.textContent = "Could not start: " + error.message;
         console.error(error);
     }
@@ -130,9 +289,9 @@ backLink.addEventListener("click", function (event)
     history.back();
 });
 
-projectSelect.addEventListener("change", function ()
+window.addEventListener("popstate", function ()
 {
-    boot(projectSelect.value);
+    boot(resolveProjectId(window.location.search, projectIds()), null);
 });
 
 window.addEventListener("resize", function ()
@@ -141,4 +300,4 @@ window.addEventListener("resize", function ()
 });
 
 fillProjects();
-boot(projectSelect.value || "pacmanclock");
+boot(resolveProjectId(window.location.search, projectIds()), "replace");

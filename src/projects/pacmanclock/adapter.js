@@ -1,9 +1,10 @@
-import { compileSources } from "../../cpp/compile.js?v=20261017";
-import { createSession } from "../../cpp/interpreter.js?v=20261017";
-import { MatrixProject } from "../project.js?v=20261017";
-import { PACMAN_ENTRIES, loadPacmanFiles } from "./load.js?v=20261017";
+import { compileSources } from "../../cpp/compile.js?v=20261018";
+import { createSession } from "../../cpp/interpreter.js?v=20261018";
+import { MatrixProject } from "../project.js?v=20261018";
+import { PACMAN_ENTRIES, loadPacmanFiles } from "./load.js?v=20261018";
 
 const DESCRIPTION = "Random 5×5 maze, HH:MM at the top, and a 5×5 Pac-Man that eats pellets. Interpreted from clogwog/pacmanclock.";
+const SHOWS = "Yellow Pac-Man walks a blue maze while the hour and minute sit on the top row.";
 
 export class PacmanClockProject extends MatrixProject
 {
@@ -12,7 +13,10 @@ export class PacmanClockProject extends MatrixProject
         super({
             id: "pacmanclock",
             title: "Pac-Man Clock",
-            description: DESCRIPTION
+            description: DESCRIPTION,
+            repo: "https://github.com/clogwog/pacmanclock",
+            shows: SHOWS,
+            thumb: "css/thumbs/pacmanclock.png"
         });
     }
 

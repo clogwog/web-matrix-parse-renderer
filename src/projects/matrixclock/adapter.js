@@ -1,9 +1,10 @@
-import { compileSources } from "../../cpp/compile.js?v=20261017";
-import { createSession } from "../../cpp/interpreter.js?v=20261017";
-import { MatrixProject } from "../project.js?v=20261017";
-import { MATRIX_ENTRIES, loadMatrixFiles } from "./load.js?v=20261017";
+import { compileSources } from "../../cpp/compile.js?v=20261018";
+import { createSession } from "../../cpp/interpreter.js?v=20261018";
+import { MatrixProject } from "../project.js?v=20261018";
+import { MATRIX_ENTRIES, loadMatrixFiles } from "./load.js?v=20261018";
 
 const DESCRIPTION = "Matrix rain over the local time. Green streaks fall down the panel, and the hour and minute digits light up in full green where a streak crosses them. Interpreted from clogwog/matrixclock.";
+const SHOWS = "Green streaks fall down the panel. Digit masks light up where a streak crosses them.";
 const FRAME_MS = 25;
 
 export class MatrixClockProject extends MatrixProject
@@ -13,7 +14,10 @@ export class MatrixClockProject extends MatrixProject
         super({
             id: "matrixclock",
             title: "Matrix Clock",
-            description: DESCRIPTION
+            description: DESCRIPTION,
+            repo: "https://github.com/clogwog/matrixclock",
+            shows: SHOWS,
+            thumb: "css/thumbs/matrixclock.png"
         });
     }
 

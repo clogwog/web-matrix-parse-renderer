@@ -20,6 +20,14 @@ npm start
 
 Then open `http://127.0.0.1:8080/`. `npm start` is `python3 -m http.server 8080`. Any other static server works the same way. Asset URLs are relative (`css/app.css`, `src/main.js`, and the loaders’ `import.meta.url` fetches), so the same tree also works under a subpath such as `https://clogwog.net/projects/panel-player/`.
 
+The page reads a `project` query parameter. These open a project directly:
+
+- `?project=pacmanclock`
+- `?project=pongclock`
+- `?project=matrixclock`
+
+A missing or unknown value starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
+
 Those URLs carry `?v=` from `BUILD_VERSION` in `src/version.js` (the CSS link, every relative module import, and each fetched `.cc`, `.h`, and `.bdf`). A CDN that keeps brotli for days then fetches the new file instead of the previous one. After changing `BUILD_VERSION`, run `node scripts/stamp-version.js` so the query strings match the constant. `npm test` checks that they do. Node strips the query while resolving modules; browsers keep it as a cache key.
 
 ```bash
@@ -36,7 +44,7 @@ Node’s built-in test runner is enough. No extra packages.
 npm test
 ```
 
-The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), and matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit).
+The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the three ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), and matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit).
 
 Regenerate the README pictures with:
 
@@ -55,7 +63,9 @@ npm run preview
 | `src/cpp/` | Preprocessor, parser, and interpreter for the C++ subset |
 | `src/matrix/` | Shared `VirtualMatrix`, local clock, and bitmap font |
 | `src/render/panel-view.js` | 32×32 glowing-dot canvas |
-| `src/projects/registry.js` | Project list behind the picker |
+| `src/projects/registry.js` | Project list behind the icon grid |
+| `src/projects/url.js` | `?project=` parsing and shareable URLs |
+| `css/thumbs/` | Square LED previews for the project icons |
 | `src/projects/pacmanclock/` | Vendored Pac-Man Clock sources, system stubs, adapter |
 | `src/projects/pongclock/` | Vendored Pong Clock sources, font, system stubs, adapter |
 | `src/projects/matrixclock/` | Vendored Matrix Clock sources, digit masks, font, system stubs, adapter |
@@ -66,8 +76,8 @@ npm run preview
 
 ## Adding a project
 
-1. Create `src/projects/<id>/adapter.js` exporting an object with `id`, `title`, `description`, and `async start(host)`.
-2. Register it in the array inside `src/projects/registry.js`.
+1. Create `src/projects/<id>/adapter.js` exporting an object with `id`, `title`, `description`, and `async start(host)`. `repo`, `shows`, and `thumb` fill the sidebar link, the hover card, and the icon (`thumb` is a page-relative path such as `css/thumbs/<id>.png`).
+2. Register it in the array inside `src/projects/registry.js`. The id is also the `?project=` value.
 3. From `start`, call `host.onFrame(frame)` with `{ width, height, pixels, brightness }`. `pixels` is a `Uint8ClampedArray` of packed RGB, length `width * height * 3`, row-major, origin at the top left.
 4. Use `host.clock.now()` for wall time, `host.schedule` / `host.cancel` to pace frames, and `host.paused()` if the bench pause button should freeze the sim.
 

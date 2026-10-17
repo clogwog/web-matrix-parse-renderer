@@ -96,17 +96,7 @@ h1 span
     padding: 18px 18px 14px;
 }
 
-label
-{
-    display: block;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 6px;
-}
-
-select, button
+button
 {
     font: inherit;
     color: var(--ink);
@@ -115,10 +105,125 @@ select, button
     border-radius: 10px;
 }
 
-select
+.repo-line
+{
+    margin: 0 0 8px;
+    font-size: 14px;
+}
+
+.projects
+{
+    margin-top: 18px;
+}
+
+#project-heading
+{
+    margin: 0 0 8px;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.project-grid
+{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.project-tile
+{
+    position: relative;
+}
+
+.project-icon
+{
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    overflow: hidden;
+    border-width: 2px;
+    border-radius: 12px;
+    cursor: pointer;
+    background: #07080c;
+}
+
+.project-icon img
 {
     width: 100%;
-    padding: 10px 12px;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.project-icon[aria-pressed="true"]
+{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+}
+
+.project-pop
+{
+    display: none;
+    position: absolute;
+    z-index: 6;
+    bottom: calc(100% + 8px);
+    width: 240px;
+    padding: 10px 12px 12px;
+    background: #0c0e14;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.project-tile:nth-child(2n + 1) .project-pop
+{
+    left: 0;
+}
+
+.project-tile:nth-child(2n) .project-pop
+{
+    right: 0;
+}
+
+.project-pop::after
+{
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 10px;
+}
+
+.project-tile:hover .project-pop,
+.project-tile:focus-within .project-pop
+{
+    display: block;
+}
+
+.project-pop strong
+{
+    display: block;
+    color: var(--ink);
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.project-pop p
+{
+    margin: 0 0 6px;
+}
+
+.project-shows
+{
+    color: var(--ink);
 }
 
 #description
