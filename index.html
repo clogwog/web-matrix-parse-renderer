@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Matrix bench</title>
-    <link rel="stylesheet" href="css/app.css?v=20261016">
+    <link rel="stylesheet" href="css/app.css?v=20261017">
 </head>
 <body>
     <a class="back" href="#" aria-label="Back">&lt;</a>
@@ -27,12 +27,12 @@
             <button id="pause" type="button">Pause</button>
             <details>
                 <summary>What this run is doing</summary>
-                <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock draws on the matrix itself and publishes a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
-                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock leaves it at 100. The preview shows the raw <code>SetPixel</code> colours.</p>
-                <p><a href="https://github.com/clogwog/pacmanclock">clogwog/pacmanclock</a> · <a href="https://github.com/clogwog/pongclock">clogwog/pongclock</a></p>
+                <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock and Matrix Clock draw on the matrix itself and publish a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
+                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock and Matrix Clock leave it at 100. The preview shows the raw <code>SetPixel</code> colours.</p>
+                <p><a href="https://github.com/clogwog/pacmanclock">clogwog/pacmanclock</a> · <a href="https://github.com/clogwog/pongclock">clogwog/pongclock</a> · <a href="https://github.com/clogwog/matrixclock">clogwog/matrixclock</a></p>
             </details>
         </aside>
     </main>
-    <script type="module" src="src/main.js?v=20261016"></script>
+    <script type="module" src="src/main.js?v=20261017"></script>
 </body>
 </html>
