@@ -88,6 +88,9 @@ function seedTypes()
         "string",
         "std::string",
         "vector",
+        "std::vector",
+        "shared_ptr",
+        "std::shared_ptr",
         "GPIO",
         "RGBMatrix",
         "Canvas",
@@ -145,6 +148,16 @@ export function createParser(tokens, knownTypes)
             error("Expected '" + value + "'");
         }
         return consume();
+    }
+
+    function expectTemplateClose()
+    {
+        if (at(">>"))
+        {
+            tok().value = ">";
+            return;
+        }
+        expect(">");
     }
 
     function consumeIdent()
@@ -328,12 +341,13 @@ export function createParser(tokens, knownTypes)
             consume();
             name += "::" + consumeIdent();
         }
-        if (name === "vector" && at("<"))
+        const baseName = name.replace(/^std::/, "");
+        if ((baseName === "vector" || baseName === "shared_ptr") && at("<"))
         {
             expect("<");
             const arg = parseTypeNode();
-            expect(">");
-            return { name: "vector", args: [arg] };
+            expectTemplateClose();
+            return { name: baseName, args: [arg] };
         }
         if (!known.has(name) && name !== "string")
         {
@@ -686,11 +700,32 @@ export function createParser(tokens, knownTypes)
         error("Expected expression");
     }
 
+    function parseTemplateArgs()
+    {
+        expect("<");
+        const args = [parseTypeNode()];
+        while (at(","))
+        {
+            consume();
+            args.push(parseTypeNode());
+        }
+        expectTemplateClose();
+        return args.map(typeToString);
+    }
+
     function parsePostfix()
     {
         let expr = parsePrimary();
         while (true)
         {
+            if (expr.kind === "ident" && (expr.name === "make_shared" || expr.name === "std::make_shared") && at("<"))
+            {
+                const typeArgs = parseTemplateArgs();
+                const line = tok().line;
+                const args = at("(") ? parseArgList() : [];
+                expr = { kind: "call", callee: expr, args, typeArgs, line };
+                continue;
+            }
             if (at("("))
             {
                 const line = tok().line;

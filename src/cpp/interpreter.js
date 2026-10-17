@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261016";
-import { localParts } from "../matrix/clock.js?v=20261016";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261016";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261017";
+import { localParts } from "../matrix/clock.js?v=20261017";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261017";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -104,6 +104,11 @@ function truthy(value)
 
 function applyBin(op, left, right)
 {
+    if (left && left.__iter && (op === "+" || op === "-"))
+    {
+        const step = op === "+" ? num(right) : -num(right);
+        return { __iter: true, vec: left.vec, index: left.index + Math.trunc(step) };
+    }
     const lf = isFloat(left);
     const rf = isFloat(right);
     const floating = lf || rf;
@@ -437,7 +442,8 @@ export function linkProgram(units)
                             name: decl.name,
                             typeName: member.typeName,
                             pointer: decl.pointer || 0,
-                            init: decl.init || null
+                            init: decl.init || null,
+                            arrayDims: decl.arrayDims && decl.arrayDims.length ? decl.arrayDims : null
                         });
                     }
                 }
@@ -1282,7 +1288,8 @@ function defineLocalClass(node, ctx)
                     name: decl.name,
                     typeName: member.typeName,
                     pointer: decl.pointer || 0,
-                    init: decl.init || null
+                    init: decl.init || null,
+                    arrayDims: decl.arrayDims && decl.arrayDims.length ? decl.arrayDims : null
                 });
             }
         }
@@ -1327,7 +1334,7 @@ function* makeInit(node, decl, env, ctx)
 {
     if (decl.arrayDims && decl.arrayDims.length)
     {
-        return yield* allocArray(node.typeName, decl.arrayDims, decl.init, env, ctx);
+        return yield* allocArray(node.typeName, decl.arrayDims, decl.init, env, ctx, node.typeArgs);
     }
     if (isStringType(node.typeName))
     {
@@ -1352,11 +1359,7 @@ function* makeInit(node, decl, env, ctx)
     }
     if (node.typeName === "vector")
     {
-        return {
-            __vector: true,
-            elemType: node.typeArgs ? node.typeArgs[0] : null,
-            items: []
-        };
+        return emptyVector(node.typeArgs);
     }
     if (ctx.hostCtors && ctx.hostCtors.has(node.typeName))
     {
@@ -1490,6 +1493,7 @@ function* construct(typeName, argNodes, env, ctx)
     const cls = ctx.classes.get(typeName);
     if (cls)
     {
+        yield* allocMemberArrays(obj, cls, env, ctx);
         yield* applyFieldInits(obj, cls, ctx);
     }
     if (cls && cls.ctor && cls.ctor.body)
@@ -1497,6 +1501,18 @@ function* construct(typeName, argNodes, env, ctx)
         yield* callUser(cls.ctor, obj, argNodes, env, ctx);
     }
     return obj;
+}
+
+function* allocMemberArrays(obj, cls, env, ctx)
+{
+    for (const field of cls.fields)
+    {
+        if (!field.arrayDims || !field.arrayDims.length)
+        {
+            continue;
+        }
+        obj.__fields[field.name] = yield* allocArray(field.typeName, field.arrayDims, null, env, ctx, null);
+    }
 }
 
 function* applyFieldInits(obj, cls, ctx)
@@ -1628,7 +1644,16 @@ function braceToStruct(ctx, typeName, brace)
     return obj;
 }
 
-function* allocArray(typeName, dims, init, env, ctx)
+function emptyVector(typeArgs)
+{
+    return {
+        __vector: true,
+        elemType: typeArgs ? typeArgs[0] : null,
+        items: []
+    };
+}
+
+function* allocArray(typeName, dims, init, env, ctx, typeArgs)
 {
     const sizes = [];
     for (const dim of dims)
@@ -1648,7 +1673,14 @@ function* allocArray(typeName, dims, init, env, ctx)
         const structElem = isStructType(ctx, typeName);
         for (let i = 0; i < sizes[0]; i++)
         {
-            arr[i] = structElem ? makeStruct(ctx, typeName) : 0;
+            if (typeName === "vector")
+            {
+                arr[i] = emptyVector(typeArgs);
+            }
+            else
+            {
+                arr[i] = structElem ? makeStruct(ctx, typeName) : 0;
+            }
         }
         if (init && init.kind === "brace")
         {
@@ -1910,7 +1942,11 @@ function readIndex(arr, index, ctx)
     }
     if (index < 0 || index >= target.length)
     {
-        throw new Error("Index " + index + " out of range " + target.length + " at line " + ctx.line);
+        if (arr && arr.__vector)
+        {
+            throw new Error("Index " + index + " out of range " + target.length + " at line " + ctx.line);
+        }
+        return 0;
     }
     return target[index];
 }
@@ -1997,6 +2033,20 @@ function bindVector(vec, name, ctx)
             {
                 vec.items.pop();
                 return 0;
+            }
+            if (name === "begin")
+            {
+                return { __iter: true, vec, index: 0 };
+            }
+            if (name === "erase")
+            {
+                const it = args[0];
+                const index = it && it.__iter ? it.index : Math.trunc(num(it));
+                if (index >= 0 && index < vec.items.length)
+                {
+                    vec.items.splice(index, 1);
+                }
+                return { __iter: true, vec, index };
             }
             throw new Error("vector has no method " + name);
         }
@@ -2088,17 +2138,29 @@ function* evalLValue(node, env, ctx)
         const arr = yield* evalExpr(node.object, env, ctx);
         const index = Math.trunc(num(yield* evalExpr(node.index, env, ctx)));
         const target = arr && arr.__vector ? arr.items : arr;
-        if (!target || index < 0 || index >= target.length)
+        if (!target || typeof target.length !== "number")
+        {
+            throw new Error("Bad index lvalue " + index + " at line " + ctx.line);
+        }
+        if (arr && arr.__vector && (index < 0 || index >= target.length))
         {
             throw new Error("Bad index lvalue " + index + " at line " + ctx.line);
         }
         return {
             get()
             {
+                if (index < 0 || index >= target.length)
+                {
+                    return 0;
+                }
                 return target[index];
             },
             set(value)
             {
+                if (index < 0 || index >= target.length)
+                {
+                    return;
+                }
                 target[index] = value;
             }
         };
@@ -2112,6 +2174,15 @@ function* evalLValue(node, env, ctx)
 
 function* evalCall(node, env, ctx)
 {
+    if (node.callee.kind === "ident" && (node.callee.name === "make_shared" || node.callee.name === "std::make_shared"))
+    {
+        const typeName = node.typeArgs && node.typeArgs[0];
+        if (!typeName)
+        {
+            throw new Error("make_shared needs a type at line " + ctx.line);
+        }
+        return yield* construct(typeName, node.args, env, ctx);
+    }
     if (node.callee.kind === "ident" && (node.callee.name === "std::swap" || node.callee.name === "swap"))
     {
         const left = yield* evalLValue(node.args[0], env, ctx);

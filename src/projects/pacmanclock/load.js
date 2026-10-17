@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261016";
+import { withAssetVersion } from "../../version.js?v=20261017";
 
 const FILES = [
     "sources/pacmanclock.cc",

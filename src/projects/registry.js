@@ -1,7 +1,8 @@
-import { pacmanClockProject } from "./pacmanclock/adapter.js?v=20261016";
-import { pongClockProject } from "./pongclock/adapter.js?v=20261016";
+import { pacmanClockProject } from "./pacmanclock/adapter.js?v=20261017";
+import { pongClockProject } from "./pongclock/adapter.js?v=20261017";
+import { matrixClockProject } from "./matrixclock/adapter.js?v=20261017";
 
-const projects = [pacmanClockProject, pongClockProject];
+const projects = [pacmanClockProject, pongClockProject, matrixClockProject];
 
 export function listProjects()
 {
