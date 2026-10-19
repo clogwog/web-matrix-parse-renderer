@@ -421,6 +421,28 @@ export function createParser(tokens, knownTypes)
         return spec;
     }
 
+    function qualifiedFrom(index)
+    {
+        const start = tokens[index];
+        if (!start || start.type !== "ident")
+        {
+            return null;
+        }
+        let name = start.value;
+        let i = index + 1;
+        while (tokens[i] && tokens[i].value === "::")
+        {
+            const next = tokens[i + 1];
+            if (!next || next.type !== "ident")
+            {
+                return name;
+            }
+            name += "::" + next.value;
+            i += 2;
+        }
+        return name;
+    }
+
     function looksLikeParams()
     {
         if (!at("("))
@@ -432,7 +454,12 @@ export function createParser(tokens, knownTypes)
         {
             return true;
         }
-        return isTypeToken(next);
+        if (isTypeToken(next))
+        {
+            return true;
+        }
+        const qualified = qualifiedFrom(pos + 1);
+        return !!(qualified && known.has(qualified));
     }
 
     function parseSuffixes()
@@ -1244,6 +1271,22 @@ export function createParser(tokens, knownTypes)
         {
             consume();
         }
+        const inits = [];
+        if (at(":"))
+        {
+            consume();
+            while (true)
+            {
+                const field = consumeIdent();
+                const args = parseArgList();
+                inits.push({ name: field, args });
+                if (!at(","))
+                {
+                    break;
+                }
+                consume();
+            }
+        }
         const body = parseBlock();
         return {
             kind: "function",
@@ -1253,9 +1296,40 @@ export function createParser(tokens, knownTypes)
             isStatic: false,
             returnType: null,
             params,
+            inits,
             body,
             line
         };
+    }
+
+    function parseTypedef()
+    {
+        const line = tok().line;
+        expect("typedef");
+        if (at("struct") || at("class"))
+        {
+            const structKind = consume().value;
+            if (tok().type === "ident" && !at("{"))
+            {
+                known.add(consumeIdent());
+            }
+            expect("{");
+            const members = [];
+            while (!at("}") && tok().type !== "eof")
+            {
+                members.push(parseVarsOrFunction());
+            }
+            expect("}");
+            const name = consumeIdent();
+            known.add(name);
+            expect(";");
+            return { kind: "class", structKind, name, members, line };
+        }
+        const spec = parseSpecs();
+        const decl = parseDeclarator();
+        known.add(decl.name);
+        expect(";");
+        return { kind: "typedef", name: decl.name, typeName: typeToString(spec.type), line };
     }
 
     function parseUsing()
@@ -1395,6 +1469,11 @@ export function createParser(tokens, knownTypes)
             if (tok().type === "ident" && tok().value === "using")
             {
                 decls.push(parseUsing());
+                continue;
+            }
+            if (tok().type === "ident" && tok().value === "typedef")
+            {
+                decls.push(parseTypedef());
                 continue;
             }
             if (isCtorDefAhead())

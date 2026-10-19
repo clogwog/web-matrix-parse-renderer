@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261018";
-import { createSession } from "../../cpp/interpreter.js?v=20261018";
-import { MatrixProject } from "../project.js?v=20261018";
-import { MATRIX_ENTRIES, loadMatrixFiles } from "./load.js?v=20261018";
+import { compileSources } from "../../cpp/compile.js?v=20261019";
+import { createSession } from "../../cpp/interpreter.js?v=20261019";
+import { MatrixProject } from "../project.js?v=20261019";
+import { MATRIX_ENTRIES, loadMatrixFiles } from "./load.js?v=20261019";
 
 const DESCRIPTION = "Matrix rain over the local time. Green streaks fall down the panel, and the hour and minute digits light up in full green where a streak crosses them. Interpreted from clogwog/matrixclock.";
 const SHOWS = "Green streaks fall down the panel. Digit masks light up where a streak crosses them.";

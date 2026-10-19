@@ -10,6 +10,8 @@ A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pa
 
 ![Matrix Clock at 14:35, rain crossing the digits](docs/preview/matrixclock-1435.png)
 
+![Tetris Clock at 14:35, pieces still falling](docs/preview/tetrisclock-1435.png)
+
 ## Run it
 
 The site is static. ES modules will not load from a `file://` URL, so use a local static server from the repo root:
@@ -25,6 +27,7 @@ The page reads a `project` query parameter. These open a project directly:
 - `?project=pacmanclock`
 - `?project=pongclock`
 - `?project=matrixclock`
+- `?project=tetrisclock`
 
 A missing or unknown value starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
 
@@ -44,7 +47,7 @@ Node’s built-in test runner is enough. No extra packages.
 npm test
 ```
 
-The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the three ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), and matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit).
+The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the three ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit), and tetrisclock (17 grey second-frame pixels at 14:35:08, then falling tetrominoes that land on later frames).
 
 Regenerate the README pictures with:
 
@@ -69,6 +72,7 @@ npm run preview
 | `src/projects/pacmanclock/` | Vendored Pac-Man Clock sources, system stubs, adapter |
 | `src/projects/pongclock/` | Vendored Pong Clock sources, font, system stubs, adapter |
 | `src/projects/matrixclock/` | Vendored Matrix Clock sources, digit masks, font, system stubs, adapter |
+| `src/projects/tetrisclock/` | Vendored Tetris Clock sources, piece tables, system stubs, adapter |
 | `src/matrix/bdf.js` | BDF loader used by the Pong Clock host `DrawText` |
 | `index.html` | The bench UI |
 
@@ -155,7 +159,7 @@ Interpreted from the current upstream sources:
 - Step about every 80&nbsp;ms of wall time
 - Local hour and minute (`localtime`), 24-hour
 
-The picker is the registry. Pac-Man Clock, Pong Clock, and Matrix Clock are registered.
+The picker is the registry. Pac-Man Clock, Pong Clock, Matrix Clock, and Tetris Clock are registered.
 
 ## What pongclock does here
 
@@ -187,6 +191,18 @@ Interpreted from the current upstream sources:
 - One frame per `usleep(25000)`. The bench waits about 25&nbsp;ms between steps
 - `shared_ptr<Rune>` is the `Rune` object itself, held in `vector<shared_ptr<Rune>> runes[32]`
 
+## What tetrisclock does here
+
+Interpreted from the current upstream sources:
+
+- The time string `"HHMM"` is handed to `setText`. Each character is a falling tetromino sequence from `TetrisLetters.h`
+- Pieces drop one row per frame, rotate on the way down, and stay where `y_stop` says
+- Colours are the nine tetris colours scaled by `brightness` 0.2, so a full channel is 51
+- A dim grey `(16,16,16)` second frame walks the border. At 14:35:08 that is 17 pixels, starting at the top from x=16
+- One frame per `usleep(125000)`. The bench waits about 125&nbsp;ms between steps
+- `drawNumbers` and the colon are in the library and are not called from `main`
+- Added to the subset for this clock: `typedef struct { ... } Name`, a constructor initializer `field(arg)`, `string` addition, `substr`, and `string[i]` as a character code. Default arguments on the declaration stay when the out-of-line definition leaves them off. An `int` initializer truncates
+
 ## What is not simulated
 
 - A general template system. The subset knows `vector<T>`, `shared_ptr<T>` as the object itself (no control block or `use_count`), `make_shared<T>(...)`, and `vector::begin` / `erase` combined with iterator `+`. A `>>` token can close two template argument lists
@@ -196,11 +212,12 @@ Interpreted from the current upstream sources:
 - Pointer arithmetic, arrays above 2D, and most of the standard library
 - In-class fixed arrays are allocated. A read past the end of a plain array returns 0, and a write past the end is ignored. `vector` still throws. Matrix Clock indexes `localstrength[32]` once a streak’s head is past the last row; that y is already off the panel
 - `cout` / `operator<<` (the font-failure branch parses, and is not taken when the BDF loads)
-- The rest of `graphics.cc` beyond `LoadFont`, `baseline`, and the 6-argument `DrawText` (ink pixels only, no background colour). Matrix Clock never calls `DrawText`
-- `thematrix.gif` from upstream (about 14&nbsp;MB). Matrix Clock does not open it
-- PWM, hardware pulsing, multi-panel chains beyond `width = cols * chain_length`, and brightness applied inside `SetPixel`. Pac-Man Clock sets brightness to 50. Pong Clock and Matrix Clock leave it at 100. The bench shows the raw pixel values and prints the driver setting beside the panel
+- The rest of `graphics.cc` beyond `LoadFont`, `baseline`, and the 6-argument `DrawText` (ink pixels only, no background colour). Matrix Clock and Tetris Clock never call `DrawText`. Tetris Clock’s `drawChar` mentions a `Font*` that `main` never sets
+- `thematrix.gif` from upstream (about 14&nbsp;MB). Matrix Clock does not open it. Tetris Clock’s README points at a remote gif; that file is not in the repo
+- `scale` above 1 and `drawLargerShape`. Tetris Clock leaves `scale` at 1
+- PWM, hardware pulsing, multi-panel chains beyond `width = cols * chain_length`, and brightness applied inside `SetPixel`. Pac-Man Clock sets driver brightness to 50. Pong Clock, Matrix Clock, and Tetris Clock leave it at 100. Tetris Clock additionally scales its own colours by 0.2. The bench shows the raw pixel values and prints the driver setting beside the panel
 - Signals, syslog output, and a GPIO init failure. `interrupt_received` stays false, so the loops run until you leave the page
-- A real `usleep` delay inside the interpreter. The bench paces Pong Clock and Matrix Clock at 25&nbsp;ms per frame and does not catch up if a frame is late
+- A real `usleep` delay inside the interpreter. The bench paces Pong Clock and Matrix Clock at 25&nbsp;ms per frame and Tetris Clock at 125&nbsp;ms, and does not catch up if a frame is late
 - `strcpy` into the unused `line[6]` buffer is implemented, and nothing reads that buffer
 - The optional `<seconds>` quit timer, unless a host passes `argc` / `argv`. The bench passes `argc == 1`
 - Catch-up if a Pac-Man frame is late: the C++ steps at most once per refresh, and the interpreter does the same
@@ -212,3 +229,5 @@ Interpreted from the current upstream sources:
 `src/projects/pongclock/sources/pongclock.cc` and `pongnumberfont.bdf` are from [clogwog/pongclock](https://github.com/clogwog/pongclock) at `ee2549e077be6f9f7ad70ba120809dcf9824fc33`. The font file says it is public domain. The RGB-matrix library itself is not vendored.
 
 `src/projects/matrixclock/sources/matrixclock.cc`, `number.cc`, `number.h`, and `pongnumberfont.bdf` are from [clogwog/matrixclock](https://github.com/clogwog/matrixclock) at `db376ca4e62ee836c096d4a1604f6042937e55df`. Upstream’s `thematrix.gif` is not included. The RGB-matrix library itself is not vendored.
+
+`src/projects/tetrisclock/sources/tetrisclock.cpp`, `TetrisMatrixDraw.cpp`, `TetrisMatrixDraw.h`, `TetrisNumbers.h`, and `TetrisLetters.h` are from [clogwog/tetrisclock](https://github.com/clogwog/tetrisclock) at `706b526468e9ce17cfddedb0a25e2b69552aab10`. The piece tables are the font. `TetrisMatrixDraw` carries Tobias Blum’s LGPL-2.1 header. The RGB-matrix library itself is not vendored.

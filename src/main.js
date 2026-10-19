@@ -1,8 +1,8 @@
-import { BUILD_VERSION } from "./version.js?v=20261018";
-import { createClock } from "./matrix/clock.js?v=20261018";
-import { findProject, listProjects } from "./projects/registry.js?v=20261018";
-import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261018";
-import { PanelView } from "./render/panel-view.js?v=20261018";
+import { BUILD_VERSION } from "./version.js?v=20261019";
+import { createClock } from "./matrix/clock.js?v=20261019";
+import { findProject, listProjects } from "./projects/registry.js?v=20261019";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261019";
+import { PanelView } from "./render/panel-view.js?v=20261019";
 
 const description = document.querySelector("#description");
 const repoLink = document.querySelector("#repo");

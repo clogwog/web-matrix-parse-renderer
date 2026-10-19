@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261018";
-import { localParts } from "../matrix/clock.js?v=20261018";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261018";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261019";
+import { localParts } from "../matrix/clock.js?v=20261019";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261019";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -116,6 +116,12 @@ function applyBin(op, left, right)
     const b = num(right);
     if (op === "+")
     {
+        const leftText = stringText(left);
+        const rightText = stringText(right);
+        if (leftText != null && rightText != null)
+        {
+            return makeString(leftText + rightText);
+        }
         return floating ? asFloat(a + b) : a + b;
     }
     if (op === "-")
@@ -399,7 +405,81 @@ function makeString(text)
         obj.s = obj.s.slice(0, index) + piece + obj.s.slice(index);
         return obj;
     };
+    obj.substr = function (pos, count)
+    {
+        const start = Math.max(0, Math.trunc(num(pos)));
+        if (count == null)
+        {
+            return makeString(obj.s.slice(start));
+        }
+        const length = Math.max(0, Math.trunc(num(count)));
+        return makeString(obj.s.slice(start, start + length));
+    };
     return obj;
+}
+
+function keepParamDefaults(previous, next)
+{
+    if (!previous || !previous.params || !next || !next.params)
+    {
+        return;
+    }
+    for (let i = 0; i < next.params.length && i < previous.params.length; i++)
+    {
+        if (next.params[i] && previous.params[i] && !next.params[i].default && previous.params[i].default)
+        {
+            next.params[i].default = previous.params[i].default;
+        }
+    }
+}
+
+const INTEGER_TYPES = new Set([
+    "int",
+    "char",
+    "short",
+    "long",
+    "long long",
+    "unsigned",
+    "unsigned int",
+    "signed",
+    "uint8_t",
+    "uint16_t",
+    "uint32_t",
+    "int8_t",
+    "int16_t",
+    "int32_t",
+    "size_t",
+    "time_t"
+]);
+
+function coerceParam(param, value)
+{
+    if (param && isStringType(param.typeName))
+    {
+        return makeString(textOf(value));
+    }
+    return coerceAssign(null, value);
+}
+
+function fitDeclared(typeName, value)
+{
+    if (value && (value.__struct || value.__class || value.__vector || value.__ptr || value.__brace || value.__iter))
+    {
+        return value;
+    }
+    if (typeName === "float" || typeName === "double")
+    {
+        return asFloat(num(value));
+    }
+    if (typeName === "bool")
+    {
+        return truthy(value);
+    }
+    if (INTEGER_TYPES.has(typeName))
+    {
+        return Math.trunc(num(value));
+    }
+    return value;
 }
 
 export function linkProgram(units)
@@ -492,11 +572,13 @@ export function linkProgram(units)
             {
                 if (node.body || !cls.ctor)
                 {
+                    keepParamDefaults(cls.ctor, node);
                     cls.ctor = node;
                 }
             }
             else if (node.body || !cls.methods.has(node.name))
             {
+                keepParamDefaults(cls.methods.get(node.name), node);
                 cls.methods.set(node.name, node);
             }
             return;
@@ -699,6 +781,15 @@ function installHosts(ctx)
             return asFloat(Math.exp(num(args[0])));
         }),
         "std::to_string": host(function (_this, args)
+        {
+            const value = args[0];
+            if (isFloat(value))
+            {
+                return makeString(String(value.v));
+            }
+            return makeString(String(Math.trunc(num(value))));
+        }),
+        to_string: host(function (_this, args)
         {
             const value = args[0];
             if (isFloat(value))
@@ -1355,7 +1446,7 @@ function* makeInit(node, decl, env, ctx)
     if (decl.init)
     {
         const value = yield* evalExpr(decl.init, env, ctx);
-        return coerceAssign(null, value);
+        return fitDeclared(node.typeName, coerceAssign(null, value));
     }
     if (node.typeName === "vector")
     {
@@ -1581,12 +1672,24 @@ function* callUser(fn, thisObj, argNodes, callerEnv, ctx)
         else if (missing && param.default)
         {
             const value = yield* evalExpr(param.default, callerEnv, ctx);
-            scope.define(param.name, coerceAssign(null, value));
+            scope.define(param.name, coerceParam(param, value));
         }
         else
         {
             const value = yield* evalExpr(argNodes[i], callerEnv, ctx);
-            scope.define(param.name, coerceAssign(null, value));
+            scope.define(param.name, coerceParam(param, value));
+        }
+    }
+    if (fn.inits && thisObj && thisObj.__fields)
+    {
+        for (const init of fn.inits)
+        {
+            let value = 0;
+            if (init.args && init.args.length)
+            {
+                value = yield* evalExpr(init.args[0], scope, ctx);
+            }
+            thisObj.__fields[init.name] = value;
         }
     }
     const savedFlow = ctx.flow;
@@ -1935,6 +2038,15 @@ function unwrap(value)
 
 function readIndex(arr, index, ctx)
 {
+    if (arr && arr.__class === "string")
+    {
+        const text = arr.s || "";
+        if (index < 0 || index >= text.length)
+        {
+            return 0;
+        }
+        return text.charCodeAt(index);
+    }
     const target = arr && arr.__vector ? arr.items : arr;
     if (!target || typeof target.length !== "number")
     {

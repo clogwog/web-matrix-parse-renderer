@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Matrix bench</title>
-    <link rel="stylesheet" href="css/app.css?v=20261018">
+    <link rel="stylesheet" href="css/app.css?v=20261019">
 </head>
 <body>
     <a class="back" href="#" aria-label="Back">&lt;</a>
@@ -28,7 +28,7 @@
                 <summary>What this run is doing</summary>
                 <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock and Matrix Clock draw on the matrix itself and publish a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
                 <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock and Matrix Clock leave it at 100. The preview shows the raw <code>SetPixel</code> colours.</p>
-                <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, or <code>matrixclock</code>.</p>
+                <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, <code>matrixclock</code>, or <code>tetrisclock</code>.</p>
             </details>
             <section class="projects" aria-labelledby="project-heading">
                 <h2 id="project-heading">Project</h2>
@@ -36,6 +36,6 @@
             </section>
         </aside>
     </main>
-    <script type="module" src="src/main.js?v=20261018"></script>
+    <script type="module" src="src/main.js?v=20261019"></script>
 </body>
 </html>
