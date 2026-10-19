@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261020";
+import { withAssetVersion } from "../../version.js?v=20261021";
 
 const FILES = [
     "sources/plasmaclock.cpp",
