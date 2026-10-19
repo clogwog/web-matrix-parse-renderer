@@ -1,6 +1,13 @@
 # Matrix bench
 
-A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), and [matrixclock](https://github.com/clogwog/matrixclock). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
+A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), [matrixclock](https://github.com/clogwog/matrixclock), and [tetrisclock](https://github.com/clogwog/tetrisclock). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
+
+The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/projects/panel-player/).
+
+- [Pac-Man Clock](https://clogwog.net/projects/panel-player/?project=pacmanclock)
+- [Pong Clock](https://clogwog.net/projects/panel-player/?project=pongclock)
+- [Matrix Clock](https://clogwog.net/projects/panel-player/?project=matrixclock)
+- [Tetris Clock](https://clogwog.net/projects/panel-player/?project=tetrisclock)
 
 ![Pac-Man Clock at 14:35](docs/preview/pacmanclock-1435.png)
 
