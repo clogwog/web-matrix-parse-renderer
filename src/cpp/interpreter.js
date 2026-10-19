@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261019";
-import { localParts } from "../matrix/clock.js?v=20261019";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261019";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261020";
+import { localParts } from "../matrix/clock.js?v=20261020";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261020";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -827,6 +827,22 @@ function installHosts(ctx)
         }),
         fmodf,
         fabsf,
+        fabs: host(function (_this, args)
+        {
+            return asFloat(Math.abs(num(args[0])));
+        }),
+        sin: host(function (_this, args)
+        {
+            return asFloat(Math.sin(num(args[0])));
+        }),
+        cos: host(function (_this, args)
+        {
+            return asFloat(Math.cos(num(args[0])));
+        }),
+        sqrt: host(function (_this, args)
+        {
+            return asFloat(Math.sqrt(num(args[0])));
+        }),
         syslog: noop,
         openlog: noop,
         setlogmask: noop,

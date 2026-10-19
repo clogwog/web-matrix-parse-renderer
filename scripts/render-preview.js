@@ -6,6 +6,7 @@ import { PACMAN_ENTRIES, loadPacmanFiles } from "../src/projects/pacmanclock/loa
 import { PONG_ENTRIES, loadPongFiles } from "../src/projects/pongclock/load.js";
 import { MATRIX_ENTRIES, loadMatrixFiles } from "../src/projects/matrixclock/load.js";
 import { TETRIS_ENTRIES, loadTetrisFiles } from "../src/projects/tetrisclock/load.js";
+import { PLASMA_ENTRIES, loadPlasmaFiles } from "../src/projects/plasmaclock/load.js";
 import { encodePng } from "../src/render/encode-png.js";
 import { rasterPanel } from "../src/render/raster-panel.js";
 
@@ -17,6 +18,8 @@ const matrixFiles = await loadMatrixFiles();
 const matrixProgram = compileSources(matrixFiles, MATRIX_ENTRIES);
 const tetrisFiles = await loadTetrisFiles();
 const tetrisProgram = compileSources(tetrisFiles, TETRIS_ENTRIES);
+const plasmaFiles = await loadPlasmaFiles();
+const plasmaProgram = compileSources(plasmaFiles, PLASMA_ENTRIES);
 
 async function shoot(name, program, date, steps, stepMs, files)
 {
@@ -40,3 +43,4 @@ await shoot("pacmanclock-1435-chomp.png", pacmanProgram, new Date(2026, 9, 16, 1
 await shoot("pongclock-1435.png", pongProgram, new Date(2026, 9, 16, 14, 35, 8), 1, 0, pongFiles);
 await shoot("matrixclock-1435.png", matrixProgram, new Date(2026, 9, 16, 14, 35, 8), 215, 0, matrixFiles);
 await shoot("tetrisclock-1435.png", tetrisProgram, new Date(2026, 9, 16, 14, 35, 8), 80, 0, tetrisFiles);
+await shoot("plasmaclock-1435.png", plasmaProgram, new Date(2026, 9, 16, 14, 35, 8), 1, 0, plasmaFiles);

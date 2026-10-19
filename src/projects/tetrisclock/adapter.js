@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261019";
-import { createSession } from "../../cpp/interpreter.js?v=20261019";
-import { MatrixProject } from "../project.js?v=20261019";
-import { TETRIS_ENTRIES, loadTetrisFiles } from "./load.js?v=20261019";
+import { compileSources } from "../../cpp/compile.js?v=20261020";
+import { createSession } from "../../cpp/interpreter.js?v=20261020";
+import { MatrixProject } from "../project.js?v=20261020";
+import { TETRIS_ENTRIES, loadTetrisFiles } from "./load.js?v=20261020";
 
 const DESCRIPTION = "Tetris pieces fall into the local time, and a dim frame creeps around the panel as the seconds pass. Interpreted from clogwog/tetrisclock.";
 const SHOWS = "Digits are built from falling tetrominoes. A grey line walks the border once a minute.";
