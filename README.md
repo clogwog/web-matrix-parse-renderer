@@ -40,7 +40,9 @@ The page reads a `project` query parameter. These open a project directly:
 - `?project=tetrisclock`
 - `?project=plasmaclock`
 
-A missing or unknown value starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
+`?brightness=` is optional and runs from 0 to 100. 100, the default, encodes the linear LED values as sRGB so Tetris (channels near 51), Pong digits (100), and Plasma (scaled by 0.5) look like a real panel. 0 shows the raw `SetPixel` bytes. The Screen slider remembers the choice in `localStorage`.
+
+A missing or unknown project starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
 
 Those URLs carry `?v=` from `BUILD_VERSION` in `src/version.js` (the CSS link, every relative module import, and each fetched `.cc`, `.h`, and `.bdf`). A CDN that keeps brotli for days then fetches the new file instead of the previous one. After changing `BUILD_VERSION`, run `node scripts/stamp-version.js` so the query strings match the constant. `npm test` checks that they do. Node strips the query while resolving modules; browsers keep it as a cache key.
 

@@ -1,8 +1,9 @@
-import { BUILD_VERSION } from "./version.js?v=20261020";
-import { createClock } from "./matrix/clock.js?v=20261020";
-import { findProject, listProjects } from "./projects/registry.js?v=20261020";
-import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261020";
-import { PanelView } from "./render/panel-view.js?v=20261020";
+import { BUILD_VERSION } from "./version.js?v=20261021";
+import { createClock } from "./matrix/clock.js?v=20261021";
+import { findProject, listProjects } from "./projects/registry.js?v=20261021";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261021";
+import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261021";
+import { PanelView } from "./render/panel-view.js?v=20261021";
 
 const description = document.querySelector("#description");
 const repoLink = document.querySelector("#repo");
@@ -10,6 +11,8 @@ const clockLabel = document.querySelector("#clock");
 const statusLabel = document.querySelector("#status");
 const canvas = document.querySelector("#panel");
 const pauseButton = document.querySelector("#pause");
+const screenBoost = document.querySelector("#screen-boost");
+const screenBoostValue = document.querySelector("#screen-boost-value");
 const backLink = document.querySelector(".back");
 const projectGrid = document.querySelector("#project-grid");
 
@@ -69,6 +72,68 @@ function markSelected(id)
         const on = button.dataset.project === id;
         button.setAttribute("aria-pressed", on ? "true" : "false");
     }
+}
+
+function readStoredBrightness()
+{
+    try
+    {
+        return parseBrightness(localStorage.getItem(DISPLAY_STORAGE_KEY));
+    }
+    catch (error)
+    {
+        return null;
+    }
+}
+
+function storeBrightness(amount)
+{
+    try
+    {
+        localStorage.setItem(DISPLAY_STORAGE_KEY, String(amount));
+    }
+    catch (error)
+    {
+        return;
+    }
+}
+
+function applyBrightness(amount, persist)
+{
+    const next = amount == null ? DEFAULT_DISPLAY_BRIGHTNESS : amount;
+    screenBoost.value = String(next);
+    screenBoostValue.textContent = String(next);
+    view.setBoost(next);
+    if (persist)
+    {
+        storeBrightness(next);
+    }
+}
+
+function writeBrightnessUrl(amount)
+{
+    const next = locationWithBrightness(window.location, amount);
+    const current = window.location.pathname + window.location.search + window.location.hash;
+    if (next === current)
+    {
+        return;
+    }
+    history.replaceState({ project: currentId, brightness: amount }, "", next);
+}
+
+function initialBrightness()
+{
+    const fromQuery = brightnessFromQuery(window.location.search);
+    if (fromQuery != null)
+    {
+        return fromQuery;
+    }
+    const stored = readStoredBrightness();
+    if (stored != null)
+    {
+        return stored;
+    }
+    return DEFAULT_DISPLAY_BRIGHTNESS;
 }
 
 function writeProjectUrl(id, mode)
@@ -272,6 +337,13 @@ async function boot(id, historyMode)
     }
 }
 
+screenBoost.addEventListener("input", function ()
+{
+    const amount = parseBrightness(screenBoost.value);
+    applyBrightness(amount == null ? DEFAULT_DISPLAY_BRIGHTNESS : amount, true);
+    writeBrightnessUrl(Number(screenBoost.value));
+});
+
 pauseButton.addEventListener("click", function ()
 {
     paused = !paused;
@@ -291,6 +363,11 @@ backLink.addEventListener("click", function (event)
 
 window.addEventListener("popstate", function ()
 {
+    const fromQuery = brightnessFromQuery(window.location.search);
+    if (fromQuery != null)
+    {
+        applyBrightness(fromQuery, true);
+    }
     boot(resolveProjectId(window.location.search, projectIds()), null);
 });
 
@@ -300,4 +377,5 @@ window.addEventListener("resize", function ()
 });
 
 fillProjects();
+applyBrightness(initialBrightness(), brightnessFromQuery(window.location.search) != null);
 boot(resolveProjectId(window.location.search, projectIds()), "replace");

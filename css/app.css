@@ -260,6 +260,33 @@ button:hover
     border-color: var(--accent);
 }
 
+.screen-row
+{
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    margin: 14px 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.screen-row input
+{
+    width: 100%;
+    accent-color: var(--accent);
+}
+
+#screen-boost-value
+{
+    min-width: 2ch;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+
 details
 {
     margin-top: 16px;

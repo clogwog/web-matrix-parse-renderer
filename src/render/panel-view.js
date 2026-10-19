@@ -1,3 +1,5 @@
+import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261021";
+
 export class PanelView
 {
     constructor(canvas)
@@ -8,11 +10,18 @@ export class PanelView
         this.cell = 16;
         this.gap = 5;
         this.pad = 22;
+        this.boost = DEFAULT_DISPLAY_BRIGHTNESS;
     }
 
     setFrame(frame)
     {
         this.frame = frame;
+        this.draw();
+    }
+
+    setBoost(amount)
+    {
+        this.boost = amount;
         this.draw();
     }
 
@@ -72,9 +81,9 @@ export class PanelView
             for (let x = 0; x < frame.width; x++)
             {
                 const i = (y * frame.width + x) * 3;
-                const r = frame.pixels[i];
-                const g = frame.pixels[i + 1];
-                const b = frame.pixels[i + 2];
+                const r = encodeLedChannel(frame.pixels[i], this.boost);
+                const g = encodeLedChannel(frame.pixels[i + 1], this.boost);
+                const b = encodeLedChannel(frame.pixels[i + 2], this.boost);
                 const cx = originX + x * pitch + this.cell / 2;
                 const cy = originY + y * pitch + this.cell / 2;
                 if (r === 0 && g === 0 && b === 0)
