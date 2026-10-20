@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261024";
-import { createSession } from "../../cpp/interpreter.js?v=20261024";
-import { MatrixProject } from "../project.js?v=20261024";
-import { DANCE_ENTRIES, loadDanceFiles } from "./load.js?v=20261024";
+import { compileSources } from "../../cpp/compile.js?v=20261025";
+import { createSession } from "../../cpp/interpreter.js?v=20261025";
+import { MatrixProject } from "../project.js?v=20261025";
+import { DANCE_ENTRIES, loadDanceFiles } from "./load.js?v=20261025";
 
 const DESCRIPTION = "David Brent dances across the panel under a dim HH:MM. Only the pixels that changed are repainted. Interpreted from clogwog/dancemonkey.";
 const SHOWS = "141 sprite frames, played twice, with the hour and minute from pongnumberfont.bdf.";

@@ -1,4 +1,4 @@
-import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261024";
+import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedColor } from "./display.js?v=20261025";
 
 export class PanelView
 {
@@ -81,9 +81,10 @@ export class PanelView
             for (let x = 0; x < frame.width; x++)
             {
                 const i = (y * frame.width + x) * 3;
-                const r = encodeLedChannel(frame.pixels[i], this.boost);
-                const g = encodeLedChannel(frame.pixels[i + 1], this.boost);
-                const b = encodeLedChannel(frame.pixels[i + 2], this.boost);
+                const led = encodeLedColor(frame.pixels[i], frame.pixels[i + 1], frame.pixels[i + 2], this.boost);
+                const r = led[0];
+                const g = led[1];
+                const b = led[2];
                 const cx = originX + x * pitch + this.cell / 2;
                 const cy = originY + y * pitch + this.cell / 2;
                 if (r === 0 && g === 0 && b === 0)

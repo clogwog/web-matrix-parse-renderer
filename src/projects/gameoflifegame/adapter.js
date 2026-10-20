@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261024";
-import { createSession } from "../../cpp/interpreter.js?v=20261024";
-import { MatrixProject } from "../project.js?v=20261024";
-import { LIFE_ENTRIES, loadLifeFiles } from "./load.js?v=20261024";
+import { compileSources } from "../../cpp/compile.js?v=20261025";
+import { createSession } from "../../cpp/interpreter.js?v=20261025";
+import { MatrixProject } from "../project.js?v=20261025";
+import { LIFE_ENTRIES, loadLifeFiles } from "./load.js?v=20261025";
 
 const DESCRIPTION = "Conway's Life fills the panel. A new cell is orange and ages toward cyan, and a field that stops changing is scrambled. Interpreted from clogwog/gameoflifegame.";
 const SHOWS = "Each live cell counts its eight neighbours. Two or three keep it, three birth a dead cell, and age shifts the colour.";

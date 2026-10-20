@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, encodeLedChannel, locationWithBrightness, parseBrightness } from "../src/render/display.js";
+import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, encodeLedChannel, encodeLedColor, locationWithBrightness, parseBrightness } from "../src/render/display.js";
 
 test("the screen curve lifts dim LED values and leaves black and full alone", () =>
 {
@@ -20,6 +20,21 @@ test("the screen curve lifts dim LED values and leaves black and full alone", ()
     assert.equal(encodeLedChannel(220, 140), 242);
     assert.equal(encodeLedChannel(220, 160), 244);
     assert.equal(encodeLedChannel(51, 50), 87);
+});
+
+test("mixed colours keep the panel CIE hue while the peak channel still lifts", () =>
+{
+    assert.deepEqual(encodeLedColor(0, 0, 0, 140), [0, 0, 0]);
+    assert.deepEqual(encodeLedColor(51, 0, 0, 140), [147, 0, 0]);
+    assert.deepEqual(encodeLedColor(49, 49, 49, 140), [145, 145, 145]);
+    assert.deepEqual(encodeLedColor(255, 255, 0, 140), [255, 255, 0]);
+    assert.deepEqual(encodeLedColor(46, 44, 36, 0), [46, 44, 36]);
+    // Daytime Brent skin is 0.2 * (232, 224, 184) = (46, 44, 36). A per-channel
+    // lift paints that (142, 140, 131). CIE1931 at the same peak stays tan.
+    assert.deepEqual(encodeLedColor(46, 44, 36, 140), [142, 138, 119]);
+    const tan = encodeLedColor(43, 40, 30, 140);
+    const washed = [encodeLedChannel(43, 140), encodeLedChannel(40, 140), encodeLedChannel(30, 140)];
+    assert.ok(tan[0] - tan[2] > washed[0] - washed[2]);
 });
 
 test("screen boost stays monotonic from off through full", () =>

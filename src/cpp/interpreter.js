@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261024";
-import { localParts } from "../matrix/clock.js?v=20261024";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261024";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261025";
+import { localParts } from "../matrix/clock.js?v=20261025";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261025";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
