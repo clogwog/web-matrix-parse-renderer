@@ -32,7 +32,7 @@ body
 
 .top
 {
-    max-width: 1100px;
+    max-width: 1180px;
     margin: 0 auto 22px;
     display: flex;
     justify-content: space-between;
@@ -63,18 +63,25 @@ h1 span
 
 .layout
 {
-    max-width: 1100px;
+    max-width: 1180px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: auto minmax(240px, 320px);
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
     gap: 28px;
     align-items: start;
+}
+
+.bench
+{
+    position: relative;
+    display: flow-root;
+    min-width: 0;
 }
 
 .stage
 {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 #panel
@@ -111,31 +118,31 @@ button
     font-size: 14px;
 }
 
-.projects
+.visually-hidden
 {
-    margin-top: 18px;
-}
-
-#project-heading
-{
-    margin: 0 0 8px;
-    font-size: 12px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 600;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .project-grid
 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
 }
 
 .project-tile
 {
-    position: relative;
+    position: absolute;
+    pointer-events: auto;
 }
 
 .project-icon
@@ -170,8 +177,7 @@ button
     display: none;
     position: absolute;
     z-index: 6;
-    bottom: calc(100% + 8px);
-    width: 240px;
+    width: min(240px, calc(100vw - 48px));
     padding: 10px 12px 12px;
     background: #0c0e14;
     border: 1px solid var(--line);
@@ -180,32 +186,75 @@ button
     color: var(--muted);
     font-size: 13px;
     line-height: 1.4;
+    cursor: pointer;
 }
 
-.project-tile:nth-child(2n + 1) .project-pop
+.project-tile[data-edge="bottom"] .project-pop
 {
+    bottom: calc(100% + 8px);
     left: 0;
 }
 
-.project-tile:nth-child(2n) .project-pop
+.project-tile[data-edge="bottom"][data-align="end"] .project-pop
 {
+    left: auto;
     right: 0;
+}
+
+.project-tile[data-edge="left"] .project-pop
+{
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.project-tile[data-edge="right"] .project-pop
+{
+    right: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .project-pop::after
 {
     content: "";
     position: absolute;
+}
+
+.project-tile[data-edge="bottom"] .project-pop::after
+{
     top: 100%;
     left: 0;
     right: 0;
-    height: 10px;
+    height: 12px;
+}
+
+.project-tile[data-edge="left"] .project-pop::after
+{
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 12px;
+}
+
+.project-tile[data-edge="right"] .project-pop::after
+{
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    width: 12px;
 }
 
 .project-tile:hover .project-pop,
-.project-tile:focus-within .project-pop
+.project-tile:focus-within .project-pop,
+.project-tile.is-open .project-pop
 {
     display: block;
+}
+
+.project-tile.is-dismissed .project-pop
+{
+    display: none;
 }
 
 .project-pop strong
@@ -348,5 +397,23 @@ a
     {
         overflow-x: auto;
         justify-content: flex-start;
+    }
+
+    .project-grid.is-narrow
+    {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 14px;
+        pointer-events: auto;
+    }
+
+    .project-grid.is-narrow .project-tile
+    {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        flex: 0 0 80px;
     }
 }

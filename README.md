@@ -119,7 +119,7 @@ npm run preview
 
 ## Adding a project
 
-1. Create `src/projects/<id>/adapter.js` exporting an object with `id`, `title`, `description`, and `async start(host)`. `repo`, `shows`, and `thumb` fill the sidebar link, the hover card, and the icon (`thumb` is a page-relative path such as `css/thumbs/<id>.png`).
+1. Create `src/projects/<id>/adapter.js` exporting an object with `id`, `title`, `description`, and `async start(host)`. `repo`, `shows`, and `thumb` fill the sidebar link, the hover card, and the icon around the panel (`thumb` is a page-relative path such as `css/thumbs/<id>.png`).
 2. Register it in the array inside `src/projects/registry.js`. The id is also the `?project=` value.
 3. From `start`, call `host.onFrame(frame)` with `{ width, height, pixels, brightness }`. `pixels` is a `Uint8ClampedArray` of packed RGB, length `width * height * 3`, row-major, origin at the top left.
 4. Use `host.clock.now()` for wall time, `host.schedule` / `host.cancel` to pace frames, and `host.paused()` if the bench pause button should freeze the sim.

@@ -15,9 +15,13 @@
         </div>
     </header>
     <main class="layout">
-        <section class="stage">
-            <canvas id="panel" width="720" height="720" aria-label="32 by 32 RGB LED matrix"></canvas>
-        </section>
+        <div class="bench">
+            <section class="stage">
+                <canvas id="panel" width="720" height="720" aria-label="32 by 32 RGB LED matrix"></canvas>
+            </section>
+            <h2 id="project-heading" class="visually-hidden">Project</h2>
+            <div id="project-grid" class="project-grid"></div>
+        </div>
         <aside class="side">
             <p id="description"></p>
             <p class="repo-line"><a id="repo" target="_blank" rel="noopener noreferrer" href="https://github.com/clogwog/pacmanclock">clogwog/pacmanclock</a></p>
@@ -35,10 +39,6 @@
                 <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, Dance Monkey, and Rexie leave it at 100. Snake Clock paints its body at 80 and its clock dimmer than that. Mario Clock multiplies every channel by 0.5 before <code>SetPixel</code>. Game of Life scales each channel by 0.5. Dance Monkey and Rexie scale the sprite by 0.2 in the day and 0.1 at night. The Screen slider is separate. 0 shows the raw <code>SetPixel</code> numbers. Above 0 the brightest channel is lifted (100 is the sRGB step, 140 the default, 160 the top) and the other channels follow the panel CIE1931 curve, so a pastel sprite keeps its hue. A CIE duty below 8/2047 stays off, so one-count dust does not light up. An LED at 0,0,0 is black, with no centre dot. <code>?brightness=</code> overrides the saved choice.</p>
                 <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, <code>matrixclock</code>, <code>tetrisclock</code>, <code>plasmaclock</code>, <code>snakeclock</code>, <code>marioclock</code>, <code>gameoflifegame</code>, <code>dancemonkey</code>, or <code>rexie</code>.</p>
             </details>
-            <section class="projects" aria-labelledby="project-heading">
-                <h2 id="project-heading">Project</h2>
-                <div id="project-grid" class="project-grid"></div>
-            </section>
         </aside>
     </main>
     <script type="module" src="src/main.js?v=20261027"></script>

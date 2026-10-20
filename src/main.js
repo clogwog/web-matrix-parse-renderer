@@ -1,6 +1,7 @@
 import { BUILD_VERSION } from "./version.js?v=20261027";
 import { createClock } from "./matrix/clock.js?v=20261027";
 import { findProject, listProjects } from "./projects/registry.js?v=20261027";
+import { PROJECT_TILE, PROJECT_TILE_GAP, placeProjectTiles } from "./projects/rail.js?v=20261027";
 import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261027";
 import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261027";
 import { PanelView } from "./render/panel-view.js?v=20261027";
@@ -15,6 +16,8 @@ const screenBoost = document.querySelector("#screen-boost");
 const screenBoostValue = document.querySelector("#screen-boost-value");
 const backLink = document.querySelector(".back");
 const projectGrid = document.querySelector("#project-grid");
+const bench = document.querySelector(".bench");
+const stage = document.querySelector(".stage");
 
 const view = new PanelView(canvas);
 const clock = createClock(null);
@@ -71,6 +74,94 @@ function markSelected(id)
     {
         const on = button.dataset.project === id;
         button.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+}
+
+function cardShown(tile)
+{
+    if (tile.classList.contains("is-dismissed"))
+    {
+        return false;
+    }
+    return tile.classList.contains("is-open") || tile.matches(":hover") || tile.matches(":focus-within");
+}
+
+function openTile(tile)
+{
+    const tiles = projectGrid.querySelectorAll(".project-tile");
+    for (const other of tiles)
+    {
+        if (other !== tile)
+        {
+            other.classList.remove("is-open");
+        }
+    }
+    tile.classList.remove("is-dismissed");
+    tile.classList.add("is-open");
+}
+
+function dismissTile(tile)
+{
+    tile.classList.remove("is-open");
+    tile.classList.add("is-dismissed");
+}
+
+function layoutProjects()
+{
+    const tiles = Array.from(projectGrid.querySelectorAll(".project-tile"));
+    const narrow = window.matchMedia("(max-width: 860px)").matches;
+    if (narrow)
+    {
+        layoutNarrow(tiles);
+        return;
+    }
+    layoutWide(tiles);
+}
+
+function layoutNarrow(tiles)
+{
+    projectGrid.classList.add("is-narrow");
+    stage.style.margin = "";
+    canvas.style.width = "";
+    for (const tile of tiles)
+    {
+        tile.style.left = "";
+        tile.style.top = "";
+        tile.style.width = "";
+        tile.style.height = "";
+        tile.dataset.edge = "bottom";
+        tile.dataset.align = "start";
+    }
+}
+
+function layoutWide(tiles)
+{
+    projectGrid.classList.remove("is-narrow");
+    const tile = PROJECT_TILE;
+    const gap = PROJECT_TILE_GAP;
+    const benchWidth = bench.clientWidth;
+    let panel = Math.min(720, Math.max(240, benchWidth - tile - gap));
+    let plan = placeProjectTiles(tiles.length, panel, tile, gap);
+    if (plan.hasRight)
+    {
+        panel = Math.min(720, Math.max(240, benchWidth - 2 * (tile + gap)));
+        plan = placeProjectTiles(tiles.length, panel, tile, gap);
+    }
+    stage.style.marginTop = plan.panelY + "px";
+    stage.style.marginLeft = (tile + gap) + "px";
+    stage.style.marginRight = plan.hasRight ? (tile + gap) + "px" : "0px";
+    stage.style.marginBottom = plan.hasBottom ? (tile + gap) + "px" : "0px";
+    canvas.style.width = panel + "px";
+    for (let index = 0; index < tiles.length; index++)
+    {
+        const place = plan.places[index];
+        const el = tiles[index];
+        el.style.width = tile + "px";
+        el.style.height = tile + "px";
+        el.style.left = place.x + "px";
+        el.style.top = place.y + "px";
+        el.dataset.edge = place.edge;
+        el.dataset.align = place.x + 240 > benchWidth - 8 ? "end" : "start";
     }
 }
 
@@ -213,13 +304,34 @@ function fillProjects()
 
         button.addEventListener("click", function ()
         {
+            if (project.id === currentId && cardShown(tile))
+            {
+                dismissTile(tile);
+                return;
+            }
+            openTile(tile);
             boot(project.id, "push");
+        });
+
+        tip.addEventListener("click", function (event)
+        {
+            if (event.target.closest("a"))
+            {
+                return;
+            }
+            dismissTile(tile);
+        });
+
+        tile.addEventListener("mouseleave", function ()
+        {
+            tile.classList.remove("is-dismissed");
         });
 
         tile.appendChild(button);
         tile.appendChild(tip);
         projectGrid.appendChild(tile);
     }
+    layoutProjects();
 }
 
 function schedule(callback)
@@ -373,6 +485,7 @@ window.addEventListener("popstate", function ()
 
 window.addEventListener("resize", function ()
 {
+    layoutProjects();
     view.resize();
 });
 
