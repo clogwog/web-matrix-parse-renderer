@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { locationWithProject, projectIdFromQuery, resolveProjectId } from "../src/projects/url.js";
 
-const IDS = ["pacmanclock", "pongclock", "matrixclock", "tetrisclock", "plasmaclock", "snakeclock", "marioclock"];
+const IDS = ["pacmanclock", "pongclock", "matrixclock", "tetrisclock", "plasmaclock", "snakeclock", "marioclock", "gameoflifegame", "dancemonkey"];
 
 test("project query accepts the clock ids and ignores anything else", () =>
 {
@@ -23,6 +23,10 @@ test("project query accepts the clock ids and ignores anything else", () =>
     assert.equal(resolveProjectId("?project=snakeclock", IDS), "snakeclock");
     assert.equal(projectIdFromQuery("?project=marioclock", IDS), "marioclock");
     assert.equal(resolveProjectId("?project=marioclock", IDS), "marioclock");
+    assert.equal(projectIdFromQuery("?project=gameoflifegame", IDS), "gameoflifegame");
+    assert.equal(resolveProjectId("?project=gameoflifegame", IDS), "gameoflifegame");
+    assert.equal(projectIdFromQuery("?project=dancemonkey", IDS), "dancemonkey");
+    assert.equal(resolveProjectId("?project=dancemonkey", IDS), "dancemonkey");
     assert.equal(projectIdFromQuery("?v=20261018&project=pongclock", IDS), "pongclock");
     assert.equal(resolveProjectId("", IDS), "pacmanclock");
     assert.equal(resolveProjectId("?project=missing", IDS), "pacmanclock");

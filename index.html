@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Matrix bench</title>
-    <link rel="stylesheet" href="css/app.css?v=20261023">
+    <link rel="stylesheet" href="css/app.css?v=20261024">
 </head>
 <body>
     <a class="back" href="#" aria-label="Back">&lt;</a>
@@ -31,9 +31,9 @@
             </label>
             <details>
                 <summary>What this run is doing</summary>
-                <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, and Mario Clock draw on the matrix itself and publish a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
-                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, and Mario Clock leave it at 100. Snake Clock paints its body at 80 and its clock dimmer than that. Mario Clock multiplies every channel by 0.5 before <code>SetPixel</code>. The Screen slider is separate. 0 shows the raw <code>SetPixel</code> numbers, 100 is an sRGB encoding of those duty cycles, and 140 is the default, a step brighter. 160 is the top. An LED at 0,0,0 is black, with no centre dot. <code>?brightness=</code> overrides the saved choice.</p>
-                <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, <code>matrixclock</code>, <code>tetrisclock</code>, <code>plasmaclock</code>, <code>snakeclock</code>, or <code>marioclock</code>.</p>
+                <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, and Dance Monkey draw on the matrix itself and publish a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
+                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, and Dance Monkey leave it at 100. Snake Clock paints its body at 80 and its clock dimmer than that. Mario Clock multiplies every channel by 0.5 before <code>SetPixel</code>. Game of Life scales each channel by 0.5. Dance Monkey scales the sprite by 0.2 in the day and 0.1 at night. The Screen slider is separate. 0 shows the raw <code>SetPixel</code> numbers, 100 is an sRGB encoding of those duty cycles, and 140 is the default, a step brighter. 160 is the top. An LED at 0,0,0 is black, with no centre dot. <code>?brightness=</code> overrides the saved choice.</p>
+                <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, <code>matrixclock</code>, <code>tetrisclock</code>, <code>plasmaclock</code>, <code>snakeclock</code>, <code>marioclock</code>, <code>gameoflifegame</code>, or <code>dancemonkey</code>.</p>
             </details>
             <section class="projects" aria-labelledby="project-heading">
                 <h2 id="project-heading">Project</h2>
@@ -41,6 +41,6 @@
             </section>
         </aside>
     </main>
-    <script type="module" src="src/main.js?v=20261023"></script>
+    <script type="module" src="src/main.js?v=20261024"></script>
 </body>
 </html>

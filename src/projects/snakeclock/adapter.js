@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261023";
-import { createSession } from "../../cpp/interpreter.js?v=20261023";
-import { MatrixProject } from "../project.js?v=20261023";
-import { SNAKE_ENTRIES, loadSnakeFiles } from "./load.js?v=20261023";
+import { compileSources } from "../../cpp/compile.js?v=20261024";
+import { createSession } from "../../cpp/interpreter.js?v=20261024";
+import { MatrixProject } from "../project.js?v=20261024";
+import { SNAKE_ENTRIES, loadSnakeFiles } from "./load.js?v=20261024";
 
 const DESCRIPTION = "A green snake hunts a red apple while the local time cycles from red through white toward green. Interpreted from clogwog/snakeclock.";
 const SHOWS = "The snake grows when it reaches the apple. HH:MM:SS sits across the top in a shifting colour.";

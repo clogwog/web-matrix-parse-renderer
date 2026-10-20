@@ -974,7 +974,10 @@ export function createParser(tokens, knownTypes)
                 consume();
                 const yes = parseExpr();
                 expect(":");
-                const no = parseExprPrec(prec);
+                // C++ : the third operand is an assignment-expression, so
+                // `cond ? a = b : c = d` is two assignments, not an assignment
+                // of the ternary. 2 is the precedence of assignment.
+                const no = parseExprPrec(2);
                 left = { kind: "ternary", test: left, yes, no, line: left.line };
                 continue;
             }

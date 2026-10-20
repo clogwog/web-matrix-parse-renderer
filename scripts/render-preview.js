@@ -9,6 +9,8 @@ import { TETRIS_ENTRIES, loadTetrisFiles } from "../src/projects/tetrisclock/loa
 import { PLASMA_ENTRIES, loadPlasmaFiles } from "../src/projects/plasmaclock/load.js";
 import { SNAKE_ENTRIES, loadSnakeFiles } from "../src/projects/snakeclock/load.js";
 import { MARIO_ENTRIES, loadMarioFiles } from "../src/projects/marioclock/load.js";
+import { LIFE_ENTRIES, loadLifeFiles } from "../src/projects/gameoflifegame/load.js";
+import { DANCE_ENTRIES, loadDanceFiles } from "../src/projects/dancemonkey/load.js";
 import { encodePng } from "../src/render/encode-png.js";
 import { rasterPanel } from "../src/render/raster-panel.js";
 
@@ -26,6 +28,10 @@ const snakeFiles = await loadSnakeFiles();
 const snakeProgram = compileSources(snakeFiles, SNAKE_ENTRIES);
 const marioFiles = await loadMarioFiles();
 const marioProgram = compileSources(marioFiles, MARIO_ENTRIES);
+const lifeFiles = await loadLifeFiles();
+const lifeProgram = compileSources(lifeFiles, LIFE_ENTRIES);
+const danceFiles = await loadDanceFiles();
+const danceProgram = compileSources(danceFiles, DANCE_ENTRIES);
 
 function downscale(src, srcW, srcH, dstW, dstH)
 {
@@ -97,3 +103,5 @@ await shoot("tetrisclock-1435.png", tetrisProgram, new Date(2026, 9, 16, 14, 35,
 await shoot("plasmaclock-1435.png", plasmaProgram, new Date(2026, 9, 16, 14, 35, 8), 1, 0, plasmaFiles);
 await shoot("snakeclock-1435.png", snakeProgram, new Date(2026, 9, 16, 14, 35, 8), 16, 0, snakeFiles, "snakeclock.png");
 await shoot("marioclock-1435.png", marioProgram, new Date(2026, 9, 16, 14, 35, 8), 138, 0, marioFiles, "marioclock.png");
+await shoot("gameoflifegame-1435.png", lifeProgram, new Date(2026, 9, 16, 14, 35, 8), 40, 0, lifeFiles, "gameoflifegame.png");
+await shoot("dancemonkey-1435.png", danceProgram, new Date(2026, 9, 16, 14, 35, 8), 16, 0, danceFiles, "dancemonkey.png");

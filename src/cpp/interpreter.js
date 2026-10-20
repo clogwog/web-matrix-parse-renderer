@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261023";
-import { localParts } from "../matrix/clock.js?v=20261023";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261023";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261024";
+import { localParts } from "../matrix/clock.js?v=20261024";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261024";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -45,8 +45,17 @@ function defaultField(typeName)
     return 0;
 }
 
+const ZERO_ROW = {
+    __zeroRow: true,
+    length: 0
+};
+
 function num(value)
 {
+    if (value && value.__zeroRow)
+    {
+        return 0;
+    }
     if (value && typeof value === "object" && value.__float)
     {
         return value.v;
@@ -64,6 +73,36 @@ function num(value)
         return 0;
     }
     return Number(value) || 0;
+}
+
+function streamChunk(value)
+{
+    if (value && value.__endl)
+    {
+        return "\n";
+    }
+    const text = stringText(value);
+    if (text != null)
+    {
+        return text;
+    }
+    if (isFloat(value))
+    {
+        return String(value.v);
+    }
+    if (typeof value === "boolean")
+    {
+        return value ? "1" : "0";
+    }
+    return String(num(value));
+}
+
+function makeOStream()
+{
+    return {
+        __ostream: true,
+        text: ""
+    };
 }
 
 function stringText(value)
@@ -94,6 +133,10 @@ function truthy(value)
     if (isFloat(value))
     {
         return value.v !== 0;
+    }
+    if (value && value.__zeroRow)
+    {
+        return false;
     }
     if (value && value.__ptr)
     {
@@ -185,6 +228,11 @@ function applyBin(op, left, right)
     }
     if (op === "<<")
     {
+        if (left && left.__ostream)
+        {
+            left.text += streamChunk(right);
+            return left;
+        }
         return a << b;
     }
     if (op === ">>")
@@ -695,6 +743,15 @@ export function createSession(program, options)
     ctx.global = global;
     global.define("stderr", 2);
     global.define("stdout", 1);
+    const endl = { __endl: true };
+    global.define("cout", makeOStream());
+    global.define("cerr", makeOStream());
+    global.define("clog", makeOStream());
+    global.define("std::cout", makeOStream());
+    global.define("std::cerr", makeOStream());
+    global.define("std::clog", makeOStream());
+    global.define("endl", endl);
+    global.define("std::endl", endl);
     installHosts(ctx);
 
     const generator = run(program, ctx, global);
@@ -1962,6 +2019,15 @@ function emptyVector(typeArgs)
     };
 }
 
+function* evalInitScalar(node, env, ctx)
+{
+    if (node && node.kind === "literal" && !node.string)
+    {
+        return node.value;
+    }
+    return scalar(yield* evalExpr(node, env, ctx));
+}
+
 function* allocArray(typeName, dims, init, env, ctx, typeArgs)
 {
     const sizes = [];
@@ -2009,8 +2075,12 @@ function* allocArray(typeName, dims, init, env, ctx, typeArgs)
     }
     if (sizes.length === 2)
     {
-        const rows = sizes[0];
+        let rows = sizes[0];
         const cols = sizes[1];
+        if (rows === 0 && init && init.kind === "brace")
+        {
+            rows = init.items.length;
+        }
         const arr = [];
         for (let r = 0; r < rows; r++)
         {
@@ -2031,7 +2101,7 @@ function* allocArray(typeName, dims, init, env, ctx, typeArgs)
                     const rowInit = init.items[r];
                     for (let c = 0; c < cols && c < rowInit.items.length; c++)
                     {
-                        arr[r][c] = scalar(yield* evalExpr(rowInit.items[c], env, ctx));
+                        arr[r][c] = yield* evalInitScalar(rowInit.items[c], env, ctx);
                     }
                 }
             }
@@ -2044,7 +2114,7 @@ function* allocArray(typeName, dims, init, env, ctx, typeArgs)
                     {
                         if (k < init.items.length)
                         {
-                            arr[r][c] = scalar(yield* evalExpr(init.items[k], env, ctx));
+                            arr[r][c] = yield* evalInitScalar(init.items[k], env, ctx);
                         }
                         k++;
                     }
@@ -2258,6 +2328,10 @@ function unwrap(value)
 
 function readIndex(arr, index, ctx)
 {
+    if (arr && arr.__zeroRow)
+    {
+        return 0;
+    }
     if (typeof arr === "string" || (arr && arr.__class === "string"))
     {
         const text = typeof arr === "string" ? arr : (arr.s || "");
@@ -2277,6 +2351,10 @@ function readIndex(arr, index, ctx)
         if (arr && arr.__vector)
         {
             throw new Error("Index " + index + " out of range " + target.length + " at line " + ctx.line);
+        }
+        if (target.length > 0 && Array.isArray(target[0]))
+        {
+            return ZERO_ROW;
         }
         return 0;
     }

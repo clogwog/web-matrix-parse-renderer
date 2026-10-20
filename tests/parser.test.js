@@ -90,6 +90,67 @@ test("parser reads a small drawing program", () =>
     assert.deepEqual(calls[4], [0, 1, 3, 200, 0]);
 });
 
+test("ternary assignments, unsized rows, streams, and a for-step write", () =>
+{
+    const source = [
+        "#define crNum(x,y,z) ((x)+(y))%z",
+        "#define bmsize ( 2 * 2 )",
+        "int first(const int icons[][bmsize], int index)",
+        "{",
+        "    return icons[index][1];",
+        "}",
+        "int main()",
+        "{",
+        "    int isAlive = 0;",
+        "    int cell = 1;",
+        "    cell ? isAlive = 1 : isAlive = 0;",
+        "    const int icons[][bmsize] = { { 9, 4, 1, 1 }, { 3, 8, 1, 1 } };",
+        "    int wrapped = crNum(0, -1, 4);",
+        "    int cells[1][3];",
+        "    for (int col = 0; col < 3; cells[0][col++] = 1);",
+        "    int grid[2][2];",
+        "    int edge = grid[crNum(0, -1, 2)][0];",
+        "    int vals[1][3];",
+        "    vals[0][0] = 2; vals[0][1] = 3; vals[0][2] = 4;",
+        "    int sum = 0;",
+        "    for (int row = 0; row < 1; row++)",
+        "        for (int col = 0; col < 3; vals[row][col++]) sum += vals[row][col];",
+        "    cout << \"speed \" << 40 << endl;",
+        "    int filled = cells[0][0] + cells[0][1] + cells[0][2] + wrapped + edge + (sum == 9 ? 0 : 50);",
+        "    SetPixel(0, 0, first(icons, 1), isAlive, filled);",
+        "    Swap();",
+        "}"
+    ].join("\n");
+    const files = new Map([["main.cc", source]]);
+    const program = compileSources(files, ["main.cc"]);
+    const calls = [];
+    program.functions.set("SetPixel", {
+        __host: true,
+        __call(_this, args)
+        {
+            calls.push(args.map(function (value)
+            {
+                return value && value.__float ? value.v : value;
+            }));
+            return 0;
+        }
+    });
+    program.functions.set("Swap", {
+        __host: true,
+        __call(_this, _args, ctx)
+        {
+            ctx.frameReady = true;
+            ctx.pendingFrame = { calls: calls.slice() };
+            return 0;
+        }
+    });
+    const session = createSession(program, { clock: createClock(0) });
+    const step = session.step(0);
+    assert.equal(step.done, false);
+    assert.equal(session.global.get("cout").text, "speed 40\n");
+    assert.deepEqual(calls[0], [0, 0, 8, 1, 2]);
+});
+
 test("pacmanclock globals expose colours, digits, and sprites", async () =>
 {
     const files = await loadPacmanFiles();

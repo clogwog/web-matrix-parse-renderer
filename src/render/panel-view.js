@@ -1,4 +1,4 @@
-import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261023";
+import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261024";
 
 export class PanelView
 {
