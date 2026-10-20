@@ -40,7 +40,7 @@ The page reads a `project` query parameter. These open a project directly:
 - `?project=tetrisclock`
 - `?project=plasmaclock`
 
-`?brightness=` is optional and runs from 0 to 100. 100, the default, encodes the linear LED values as sRGB so Tetris (channels near 51), Pong digits (100), and Plasma (scaled by 0.5) look like a real panel. 0 shows the raw `SetPixel` bytes. The Screen slider remembers the choice in `localStorage`.
+`?brightness=` is optional and runs from 0 to 160. 0 shows the raw `SetPixel` bytes. 100 encodes them as sRGB. 140, the default, goes a step past that so Tetris (channels near 51), Pong digits (100), Pong’s centre dashes (10), and Plasma (scaled by 0.5) read more like a real panel. 255 stays full, so Pac-Man and Matrix do not clip. An off LED is black and has no centre dot, so it is never lighter than a dim lit one. The Screen slider remembers the choice in `localStorage`.
 
 A missing or unknown project starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
 

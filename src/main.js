@@ -1,9 +1,9 @@
-import { BUILD_VERSION } from "./version.js?v=20261021";
-import { createClock } from "./matrix/clock.js?v=20261021";
-import { findProject, listProjects } from "./projects/registry.js?v=20261021";
-import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261021";
-import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261021";
-import { PanelView } from "./render/panel-view.js?v=20261021";
+import { BUILD_VERSION } from "./version.js?v=20261022";
+import { createClock } from "./matrix/clock.js?v=20261022";
+import { findProject, listProjects } from "./projects/registry.js?v=20261022";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261022";
+import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261022";
+import { PanelView } from "./render/panel-view.js?v=20261022";
 
 const description = document.querySelector("#description");
 const repoLink = document.querySelector("#repo");
@@ -376,6 +376,7 @@ window.addEventListener("resize", function ()
     view.resize();
 });
 
+screenBoost.max = String(DISPLAY_BRIGHTNESS_MAX);
 fillProjects();
 applyBrightness(initialBrightness(), brightnessFromQuery(window.location.search) != null);
 boot(resolveProjectId(window.location.search, projectIds()), "replace");

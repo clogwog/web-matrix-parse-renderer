@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Matrix bench</title>
-    <link rel="stylesheet" href="css/app.css?v=20261021">
+    <link rel="stylesheet" href="css/app.css?v=20261022">
 </head>
 <body>
     <a class="back" href="#" aria-label="Back">&lt;</a>
@@ -26,13 +26,13 @@
             <button id="pause" type="button">Pause</button>
             <label class="screen-row" for="screen-boost">
                 <span>Screen</span>
-                <input id="screen-boost" type="range" min="0" max="100" value="100" step="1">
-                <span id="screen-boost-value">100</span>
+                <input id="screen-boost" type="range" min="0" max="160" value="140" step="1">
+                <span id="screen-boost-value">140</span>
             </label>
             <details>
                 <summary>What this run is doing</summary>
                 <p>Each project is the upstream C++ sources, parsed and interpreted in the browser. Pac-Man Clock publishes a frame at <code>SwapOnVSync</code>. Pong Clock, Matrix Clock, Tetris Clock, and Plasma Clock draw on the matrix itself and publish a frame at <code>usleep</code>. GPIO, the Adafruit HAT, and syslog are host stubs.</p>
-                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock, Matrix Clock, Tetris Clock, and Plasma Clock leave it at 100. The Screen slider is separate: it maps those linear LED values into sRGB so a low duty cycle looks like a real panel. 100 is the default. 0 shows the raw <code>SetPixel</code> numbers. <code>?brightness=</code> overrides the saved choice.</p>
+                <p>Driver brightness is whatever the program sets. Pac-Man Clock uses 50. Pong Clock, Matrix Clock, Tetris Clock, and Plasma Clock leave it at 100. The Screen slider is separate. 0 shows the raw <code>SetPixel</code> numbers, 100 is an sRGB encoding of those duty cycles, and 140 is the default, a step brighter. 160 is the top. An LED at 0,0,0 is black, with no centre dot. <code>?brightness=</code> overrides the saved choice.</p>
                 <p>Open a project directly with <code>?project=pacmanclock</code>, <code>pongclock</code>, <code>matrixclock</code>, <code>tetrisclock</code>, or <code>plasmaclock</code>.</p>
             </details>
             <section class="projects" aria-labelledby="project-heading">
@@ -41,6 +41,6 @@
             </section>
         </aside>
     </main>
-    <script type="module" src="src/main.js?v=20261021"></script>
+    <script type="module" src="src/main.js?v=20261022"></script>
 </body>
 </html>

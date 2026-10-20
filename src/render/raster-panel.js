@@ -23,7 +23,7 @@ export function rasterPanel(frame, options)
             const cy = pad + y * pitch + cell / 2;
             if (r === 0 && g === 0 && b === 0)
             {
-                stamp(rgba, width, height, cx, cy, radius * 0.72, 26, 29, 39, 255);
+                stamp(rgba, width, height, cx, cy, radius, 0, 0, 0, 255);
                 continue;
             }
             stamp(rgba, width, height, cx, cy, radius * 1.35, r, g, b, 72);

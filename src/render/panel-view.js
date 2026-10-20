@@ -1,4 +1,4 @@
-import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261021";
+import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedChannel } from "./display.js?v=20261022";
 
 export class PanelView
 {
@@ -89,8 +89,8 @@ export class PanelView
                 if (r === 0 && g === 0 && b === 0)
                 {
                     ctx.beginPath();
-                    ctx.fillStyle = "#1a1d27";
-                    ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+                    ctx.fillStyle = "#000000";
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
                     ctx.fill();
                     continue;
                 }
