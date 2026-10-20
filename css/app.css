@@ -226,7 +226,7 @@ button
     top: 100%;
     left: 0;
     right: 0;
-    height: 12px;
+    height: 16px;
 }
 
 .project-tile[data-edge="left"] .project-pop::after
@@ -234,7 +234,7 @@ button
     top: 0;
     bottom: 0;
     right: 100%;
-    width: 12px;
+    width: 16px;
 }
 
 .project-tile[data-edge="right"] .project-pop::after
@@ -242,12 +242,11 @@ button
     top: 0;
     bottom: 0;
     left: 100%;
-    width: 12px;
+    width: 16px;
 }
 
-.project-tile:hover .project-pop,
-.project-tile:focus-within .project-pop,
-.project-tile.is-open .project-pop
+.project-tile.is-hot .project-pop,
+.project-tile:has(:focus-visible) .project-pop
 {
     display: block;
 }

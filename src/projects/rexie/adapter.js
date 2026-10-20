@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261027";
-import { createSession } from "../../cpp/interpreter.js?v=20261027";
-import { MatrixProject } from "../project.js?v=20261027";
-import { REXIE_ENTRIES, loadRexieFiles } from "./load.js?v=20261027";
+import { compileSources } from "../../cpp/compile.js?v=20261028";
+import { createSession } from "../../cpp/interpreter.js?v=20261028";
+import { MatrixProject } from "../project.js?v=20261028";
+import { REXIE_ENTRIES, loadRexieFiles } from "./load.js?v=20261028";
 
 const DESCRIPTION = "The offline Chrome dinosaur runs under a dim HH:MM. Only the pixels that changed are repainted. Interpreted from clogwog/rexie.";
 const SHOWS = "80 sprite frames, played twice, with the hour and minute from pongnumberfont.bdf.";

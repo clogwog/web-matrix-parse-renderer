@@ -1,10 +1,10 @@
-import { BUILD_VERSION } from "./version.js?v=20261027";
-import { createClock } from "./matrix/clock.js?v=20261027";
-import { findProject, listProjects } from "./projects/registry.js?v=20261027";
-import { PROJECT_TILE, PROJECT_TILE_GAP, placeProjectTiles } from "./projects/rail.js?v=20261027";
-import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261027";
-import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261027";
-import { PanelView } from "./render/panel-view.js?v=20261027";
+import { BUILD_VERSION } from "./version.js?v=20261028";
+import { createClock } from "./matrix/clock.js?v=20261028";
+import { findProject, listProjects } from "./projects/registry.js?v=20261028";
+import { PROJECT_TILE, PROJECT_TILE_GAP, placeProjectTiles } from "./projects/rail.js?v=20261028";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261028";
+import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261028";
+import { PanelView } from "./render/panel-view.js?v=20261028";
 
 const description = document.querySelector("#description");
 const repoLink = document.querySelector("#repo");
@@ -77,33 +77,65 @@ function markSelected(id)
     }
 }
 
+const CARD_GRACE_MS = 160;
+const cardHideTimers = new WeakMap();
+const cardDismissedAt = new WeakMap();
+
 function cardShown(tile)
 {
-    if (tile.classList.contains("is-dismissed"))
-    {
-        return false;
-    }
-    return tile.classList.contains("is-open") || tile.matches(":hover") || tile.matches(":focus-within");
+    return tile.classList.contains("is-hot") && !tile.classList.contains("is-dismissed");
 }
 
-function openTile(tile)
+function cancelCardHide(tile)
 {
+    const timer = cardHideTimers.get(tile);
+    if (!timer)
+    {
+        return;
+    }
+    clearTimeout(timer);
+    cardHideTimers.delete(tile);
+}
+
+function showCard(tile)
+{
+    cancelCardHide(tile);
     const tiles = projectGrid.querySelectorAll(".project-tile");
     for (const other of tiles)
     {
         if (other !== tile)
         {
-            other.classList.remove("is-open");
+            cancelCardHide(other);
+            other.classList.remove("is-hot");
         }
     }
-    tile.classList.remove("is-dismissed");
-    tile.classList.add("is-open");
+    tile.classList.add("is-hot");
+}
+
+function scheduleCardHide(tile)
+{
+    cancelCardHide(tile);
+    const timer = setTimeout(function ()
+    {
+        cardHideTimers.delete(tile);
+        tile.classList.remove("is-hot");
+        tile.classList.remove("is-dismissed");
+    }, CARD_GRACE_MS);
+    cardHideTimers.set(tile, timer);
+}
+
+function pointerInsideTile(tile, event)
+{
+    const next = event.relatedTarget;
+    return next instanceof Node && tile.contains(next);
 }
 
 function dismissTile(tile)
 {
-    tile.classList.remove("is-open");
+    cancelCardHide(tile);
+    tile.classList.remove("is-hot");
     tile.classList.add("is-dismissed");
+    cardDismissedAt.set(tile, performance.now());
 }
 
 function layoutProjects()
@@ -309,7 +341,8 @@ function fillProjects()
                 dismissTile(tile);
                 return;
             }
-            openTile(tile);
+            tile.classList.remove("is-dismissed");
+            showCard(tile);
             boot(project.id, "push");
         });
 
@@ -322,9 +355,24 @@ function fillProjects()
             dismissTile(tile);
         });
 
-        tile.addEventListener("mouseleave", function ()
+        tile.addEventListener("mouseenter", function ()
         {
+            const dismissedAt = cardDismissedAt.get(tile) || 0;
+            if (tile.classList.contains("is-dismissed") && performance.now() - dismissedAt < 80)
+            {
+                return;
+            }
             tile.classList.remove("is-dismissed");
+            showCard(tile);
+        });
+
+        tile.addEventListener("mouseleave", function (event)
+        {
+            if (pointerInsideTile(tile, event))
+            {
+                return;
+            }
+            scheduleCardHide(tile);
         });
 
         tile.appendChild(button);

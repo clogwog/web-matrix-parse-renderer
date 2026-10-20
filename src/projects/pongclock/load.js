@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261027";
+import { withAssetVersion } from "../../version.js?v=20261028";
 
 const FILES = [
     "sources/pongclock.cc",
