@@ -81,7 +81,7 @@ export function parseBdf(text)
     return font;
 }
 
-export function drawBdfText(setPixel, font, x, y, r, g, b, text)
+export function drawBdfText(setPixel, font, x, y, r, g, b, text, extraSpacing)
 {
     const glyphs = font && font.glyphs;
     if (!glyphs)
@@ -90,6 +90,7 @@ export function drawBdfText(setPixel, font, x, y, r, g, b, text)
     }
     const start = x | 0;
     let cursor = start;
+    const gap = extraSpacing ? extraSpacing | 0 : 0;
     const source = text == null ? "" : String(text);
     for (const ch of source)
     {
@@ -112,7 +113,7 @@ export function drawBdfText(setPixel, font, x, y, r, g, b, text)
                 mask >>= 1n;
             }
         }
-        cursor += glyph.device_width;
+        cursor += glyph.device_width + gap;
     }
     return cursor - start;
 }

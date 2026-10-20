@@ -1,10 +1,12 @@
-import { pacmanClockProject } from "./pacmanclock/adapter.js?v=20261022";
-import { pongClockProject } from "./pongclock/adapter.js?v=20261022";
-import { matrixClockProject } from "./matrixclock/adapter.js?v=20261022";
-import { tetrisClockProject } from "./tetrisclock/adapter.js?v=20261022";
-import { plasmaClockProject } from "./plasmaclock/adapter.js?v=20261022";
+import { pacmanClockProject } from "./pacmanclock/adapter.js?v=20261023";
+import { pongClockProject } from "./pongclock/adapter.js?v=20261023";
+import { matrixClockProject } from "./matrixclock/adapter.js?v=20261023";
+import { tetrisClockProject } from "./tetrisclock/adapter.js?v=20261023";
+import { plasmaClockProject } from "./plasmaclock/adapter.js?v=20261023";
+import { snakeClockProject } from "./snakeclock/adapter.js?v=20261023";
+import { marioClockProject } from "./marioclock/adapter.js?v=20261023";
 
-const projects = [pacmanClockProject, pongClockProject, matrixClockProject, tetrisClockProject, plasmaClockProject];
+const projects = [pacmanClockProject, pongClockProject, matrixClockProject, tetrisClockProject, plasmaClockProject, snakeClockProject, marioClockProject];
 
 export function listProjects()
 {

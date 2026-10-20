@@ -1,6 +1,6 @@
-import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261022";
-import { localParts } from "../matrix/clock.js?v=20261022";
-import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261022";
+import { VirtualMatrix } from "../matrix/virtual-matrix.js?v=20261023";
+import { localParts } from "../matrix/clock.js?v=20261023";
+import { drawBdfText, parseBdf } from "../matrix/bdf.js?v=20261023";
 
 const HOST_STRUCTS = new Map([
     ["timeval", [
@@ -375,6 +375,24 @@ function textOf(value)
     {
         return value.s;
     }
+    if (Array.isArray(value))
+    {
+        let out = "";
+        for (let i = 0; i < value.length; i++)
+        {
+            if (typeof value[i] !== "number")
+            {
+                break;
+            }
+            const code = value[i] | 0;
+            if (!code)
+            {
+                break;
+            }
+            out += String.fromCharCode(code & 255);
+        }
+        return out;
+    }
     return String(value);
 }
 
@@ -461,8 +479,44 @@ function coerceParam(param, value)
     return coerceAssign(null, value);
 }
 
+function copyInstance(value)
+{
+    const obj = {
+        __class: value.__class,
+        __fields: {}
+    };
+    const fields = value.__fields || {};
+    for (const key of Object.keys(fields))
+    {
+        obj.__fields[key] = copyField(fields[key]);
+    }
+    return obj;
+}
+
+function copyField(value)
+{
+    if (Array.isArray(value))
+    {
+        const out = new Array(value.length);
+        for (let i = 0; i < value.length; i++)
+        {
+            out[i] = copyField(value[i]);
+        }
+        return out;
+    }
+    if (value && value.__fields && value.__class)
+    {
+        return copyInstance(value);
+    }
+    return value;
+}
+
 function fitDeclared(typeName, value)
 {
+    if (value && value.__fields && value.__class && typeName === value.__class)
+    {
+        return copyInstance(value);
+    }
     if (value && (value.__struct || value.__class || value.__vector || value.__ptr || value.__brace || value.__iter))
     {
         return value;
@@ -606,6 +660,10 @@ export function linkProgram(units)
             {
                 globalVars.push(decl);
             }
+            else if (decl.kind === "enum")
+            {
+                globalVars.push(decl);
+            }
         }
     }
 
@@ -635,6 +693,8 @@ export function createSession(program, options)
 
     const global = new Scope(null, "global", ctx);
     ctx.global = global;
+    global.define("stderr", 2);
+    global.define("stdout", 1);
     installHosts(ctx);
 
     const generator = run(program, ctx, global);
@@ -826,6 +886,63 @@ function installHosts(ctx)
             return 0;
         }),
         fmodf,
+        fmod: host(function (_this, args)
+        {
+            const a = num(args[0]);
+            const b = num(args[1]);
+            if (!b)
+            {
+                return asFloat(0);
+            }
+            return asFloat(a - Math.trunc(a / b) * b);
+        }),
+        floor: host(function (_this, args)
+        {
+            return asFloat(Math.floor(num(args[0])));
+        }),
+        sinf: host(function (_this, args)
+        {
+            return asFloat(Math.sin(num(args[0])));
+        }),
+        cosf: host(function (_this, args)
+        {
+            return asFloat(Math.cos(num(args[0])));
+        }),
+        localtime_r: host(function (_this, args)
+        {
+            const seconds = num(unwrap(args[0]));
+            const parts = localParts(seconds * 1000);
+            const dest = unwrap(args[1]);
+            if (!dest || typeof dest !== "object")
+            {
+                throw new Error("localtime_r expects a tm");
+            }
+            dest.tm_sec = parts.sec;
+            dest.tm_min = parts.min;
+            dest.tm_hour = parts.hour;
+            dest.tm_mday = parts.mday;
+            dest.tm_mon = parts.mon;
+            dest.tm_year = parts.year;
+            dest.tm_wday = parts.wday;
+            return dest;
+        }),
+        strftime: host(function (_this, args)
+        {
+            const dest = unwrap(args[0]);
+            const max = num(args[1]);
+            const fmt = textOf(args[2]);
+            const tm = unwrap(args[3]) || {};
+            const pad = function (n)
+            {
+                const v = Math.trunc(num(n));
+                return (v < 10 ? "0" : "") + String(v);
+            };
+            const text = String(fmt)
+                .replace(/%H/g, pad(tm.tm_hour))
+                .replace(/%M/g, pad(tm.tm_min))
+                .replace(/%S/g, pad(tm.tm_sec));
+            return writeCString(dest, text, max);
+        }),
         fabsf,
         fabs: host(function (_this, args)
         {
@@ -847,6 +964,7 @@ function installHosts(ctx)
         openlog: noop,
         setlogmask: noop,
         printf: noop,
+        fprintf: noop,
         signal: noop
     };
     for (const name of Object.keys(table))
@@ -896,13 +1014,40 @@ function installHosts(ctx)
         {
             return 0;
         }
+        let text = args[5];
+        let spacing = 0;
+        if (args.length >= 7)
+        {
+            text = args[6];
+            spacing = num(args[7]);
+        }
         return drawBdfText(function (px, py, r, g, b)
         {
             canvas.SetPixel(px, py, r, g, b);
-        }, font, num(args[2]), num(args[3]), num(color.r), num(color.g), num(color.b), textOf(args[5]));
+        }, font, num(args[2]), num(args[3]), num(color.r), num(color.g), num(color.b), textOf(text), spacing);
     });
     ctx.functions.set("rgb_matrix::DrawText", drawText);
     ctx.functions.set("DrawText", drawText);
+}
+
+function writeCString(dest, text, max)
+{
+    const raw = text == null ? "" : String(text);
+    const room = max == null ? raw.length : Math.max(0, Math.trunc(max) - 1);
+    const clipped = raw.slice(0, room);
+    if (Array.isArray(dest))
+    {
+        let i = 0;
+        for (; i < clipped.length && i < dest.length; i++)
+        {
+            dest[i] = clipped.charCodeAt(i);
+        }
+        if (i < dest.length)
+        {
+            dest[i] = 0;
+        }
+    }
+    return clipped.length;
 }
 
 function fillValue(dest, value)
@@ -1107,7 +1252,14 @@ function* run(program, ctx, global)
 {
     for (const decl of program.globalVars)
     {
-        yield* execVars(decl, global, ctx);
+        if (decl.kind === "enum")
+        {
+            yield* execEnum(decl, global, ctx);
+        }
+        else
+        {
+            yield* execVars(decl, global, ctx);
+        }
     }
     const main = ctx.functions.get("main");
     if (!main || !main.body)
@@ -1184,6 +1336,9 @@ function* execStatement(node, env, ctx)
             break;
         case "class":
             defineLocalClass(node, ctx);
+            break;
+        case "enum":
+            yield* execEnum(node, env, ctx);
             break;
         case "expr":
             yield* evalExpr(node.expr, env, ctx);
@@ -1295,6 +1450,15 @@ function* execFor(node, env, ctx)
     }
 }
 
+function* execEnum(node, env, ctx)
+{
+    for (const item of node.enumerators)
+    {
+        const value = item.init ? yield* evalExpr(item.init, env, ctx) : 0;
+        env.define(item.name, Math.trunc(num(value)));
+    }
+}
+
 function* execForRange(node, env, ctx)
 {
     const value = yield* evalExpr(node.iter, env, ctx);
@@ -1306,7 +1470,29 @@ function* execForRange(node, env, ctx)
     for (let i = 0; i < items.length; i++)
     {
         const scope = new Scope(env, "block", ctx);
-        scope.define(node.name, items[i]);
+        const item = items[i];
+        if (node.isRef)
+        {
+            const index = i;
+            scope.defineRef(node.name, {
+                get()
+                {
+                    return items[index];
+                },
+                set(next)
+                {
+                    items[index] = next;
+                }
+            });
+        }
+        else if (item && item.__fields && item.__class)
+        {
+            scope.define(node.name, copyInstance(item));
+        }
+        else
+        {
+            scope.define(node.name, item);
+        }
         yield* execStatement(node.body, scope, ctx);
         if (ctx.flow && ctx.flow.type === "return")
         {
@@ -1462,9 +1648,13 @@ function* makeInit(node, decl, env, ctx)
     if (decl.init)
     {
         const value = yield* evalExpr(decl.init, env, ctx);
+        if (decl.pointer)
+        {
+            return value;
+        }
         return fitDeclared(node.typeName, coerceAssign(null, value));
     }
-    if (node.typeName === "vector")
+    if (node.typeName === "vector" || node.typeName === "deque")
     {
         return emptyVector(node.typeArgs);
     }
@@ -1583,7 +1773,7 @@ function* construct(typeName, argNodes, env, ctx)
         const raw = args[0];
         return makeString(raw == null ? "" : textOf(raw));
     }
-    if (typeName === "vector")
+    if (typeName === "vector" || typeName === "deque")
     {
         return { __vector: true, elemType: null, items: [] };
     }
@@ -1665,7 +1855,7 @@ function coerceField(field, value)
 
 function* callUser(fn, thisObj, argNodes, callerEnv, ctx)
 {
-    const scope = new Scope(ctx.global, "func", ctx);
+    const scope = new Scope(fn.closure || ctx.global, "func", ctx);
     scope.fn = fn;
     scope.thisObj = thisObj;
     for (let i = 0; i < fn.params.length; i++)
@@ -1930,6 +2120,16 @@ function* evalExpr(node, env, ctx)
         }
         case "paren":
             return yield* evalExpr(node.expr, env, ctx);
+        case "lambda":
+            return {
+                __userFn: {
+                    name: "<lambda>",
+                    params: node.params,
+                    body: node.body,
+                    closure: env,
+                    inits: null
+                }
+            };
         case "brace":
         {
             const items = [];
@@ -2036,6 +2236,10 @@ function assignInto(ctx, current, value)
         }
         return braceToStruct(ctx, typeName, value);
     }
+    if (value && value.__fields && value.__class)
+    {
+        return copyInstance(value);
+    }
     if (value && value.__struct)
     {
         return Object.assign({ __struct: value.__struct }, value);
@@ -2054,9 +2258,9 @@ function unwrap(value)
 
 function readIndex(arr, index, ctx)
 {
-    if (arr && arr.__class === "string")
+    if (typeof arr === "string" || (arr && arr.__class === "string"))
     {
-        const text = arr.s || "";
+        const text = typeof arr === "string" ? arr : (arr.s || "");
         if (index < 0 || index >= text.length)
         {
             return 0;
@@ -2126,19 +2330,26 @@ function bindVector(vec, name, ctx)
         __this: vec,
         __call: function (_this, args)
         {
-            if (name === "push_back")
+            if (name === "push_back" || name === "push_front")
             {
-                let value = args[0];
-                if (value && value.__brace)
+                const value = storedSequenceValue(args[0], vec, ctx);
+                if (name === "push_front")
                 {
-                    value = braceToStruct(ctx, vec.elemType, value);
+                    vec.items.unshift(value);
                 }
-                else if (value && value.__struct)
+                else
                 {
-                    value = Object.assign({ __struct: value.__struct }, value);
+                    vec.items.push(value);
                 }
-                vec.items.push(value);
                 return 0;
+            }
+            if (name === "front")
+            {
+                if (!vec.items.length)
+                {
+                    throw new Error("front of empty sequence at line " + ctx.line);
+                }
+                return vec.items[0];
             }
             if (name === "clear")
             {
@@ -2300,8 +2511,29 @@ function* evalLValue(node, env, ctx)
     throw new Error("Not an lvalue (" + node.kind + ") at line " + ctx.line);
 }
 
+function storedSequenceValue(value, vec, ctx)
+{
+    if (value && value.__brace)
+    {
+        return braceToStruct(ctx, vec.elemType, value);
+    }
+    if (value && value.__fields && value.__class)
+    {
+        return copyInstance(value);
+    }
+    if (value && value.__struct)
+    {
+        return Object.assign({ __struct: value.__struct }, value);
+    }
+    return value;
+}
+
 function* evalCall(node, env, ctx)
 {
+    if (node.callee.kind === "ident" && (ctx.classes.has(node.callee.name) || (ctx.hostCtors && ctx.hostCtors.has(node.callee.name))))
+    {
+        return yield* construct(node.callee.name, node.args, env, ctx);
+    }
     if (node.callee.kind === "ident" && (node.callee.name === "make_shared" || node.callee.name === "std::make_shared"))
     {
         const typeName = node.typeArgs && node.typeArgs[0];

@@ -89,6 +89,8 @@ function seedTypes()
         "std::string",
         "vector",
         "std::vector",
+        "deque",
+        "std::deque",
         "shared_ptr",
         "std::shared_ptr",
         "GPIO",
@@ -342,7 +344,7 @@ export function createParser(tokens, knownTypes)
             name += "::" + consumeIdent();
         }
         const baseName = name.replace(/^std::/, "");
-        if ((baseName === "vector" || baseName === "shared_ptr") && at("<"))
+        if ((baseName === "vector" || baseName === "shared_ptr" || baseName === "deque") && at("<"))
         {
             expect("<");
             const arg = parseTypeNode();
@@ -395,6 +397,11 @@ export function createParser(tokens, knownTypes)
                 {
                     spec.isVolatile = true;
                 }
+                consume();
+                continue;
+            }
+            if (tok().type === "ident" && (tok().value === "inline" || tok().value === "constexpr"))
+            {
                 consume();
                 continue;
             }
@@ -705,6 +712,10 @@ export function createParser(tokens, knownTypes)
         {
             return parseBrace();
         }
+        if (at("["))
+        {
+            return parseLambda();
+        }
         if (at("("))
         {
             const line = t.line;
@@ -834,8 +845,51 @@ export function createParser(tokens, knownTypes)
         }
     }
 
+    function parseLambda()
+    {
+        const line = tok().line;
+        expect("[");
+        let capture = "none";
+        if (at("&"))
+        {
+            capture = "ref";
+            consume();
+        }
+        else if (at("="))
+        {
+            capture = "value";
+            consume();
+        }
+        expect("]");
+        let params = [];
+        if (at("("))
+        {
+            params = parseParameterList();
+        }
+        let returnType = null;
+        if (at("->"))
+        {
+            consume();
+            returnType = typeToString(parseTypeNode());
+        }
+        const body = parseBlock();
+        return { kind: "lambda", capture, params, returnType, body, line };
+    }
+
     function parseUnary()
     {
+        if (tok().type === "ident" && tok().value === "static_cast" && tokens[pos + 1] && tokens[pos + 1].value === "<")
+        {
+            const line = tok().line;
+            consume();
+            expect("<");
+            const type = parseTypeNode();
+            expectTemplateClose();
+            expect("(");
+            const expr = parseExpr();
+            expect(")");
+            return { kind: "cast", typeName: typeToString(type), expr, line };
+        }
         if (tok().type === "ident" && tok().value === "sizeof")
         {
             const line = tok().line;
@@ -1033,11 +1087,14 @@ export function createParser(tokens, knownTypes)
                 isConst = true;
                 consume();
             }
-            if (!(tok().type === "ident" && tok().value === "auto"))
+            if (tok().type === "ident" && tok().value === "auto")
             {
-                error("Expected auto in range-for");
+                consume();
             }
-            consume();
+            else
+            {
+                parseTypeNode();
+            }
             let isRef = false;
             if (at("&"))
             {
@@ -1149,6 +1206,10 @@ export function createParser(tokens, knownTypes)
         {
             return parseSwitch();
         }
+        if (tok().type === "ident" && tok().value === "enum")
+        {
+            return parseEnum();
+        }
         if (tok().type === "ident" && tok().value === "return")
         {
             const line = tok().line;
@@ -1219,6 +1280,22 @@ export function createParser(tokens, knownTypes)
                     trailingConst = true;
                     consume();
                 }
+                const inits = [];
+                if (at(":"))
+                {
+                    consume();
+                    while (true)
+                    {
+                        const field = consumeIdent();
+                        const args = parseArgList();
+                        inits.push({ name: field, args });
+                        if (!at(","))
+                        {
+                            break;
+                        }
+                        consume();
+                    }
+                }
                 let body = null;
                 if (at("{"))
                 {
@@ -1234,6 +1311,7 @@ export function createParser(tokens, knownTypes)
                     className,
                     isConstructor: true,
                     params,
+                    inits,
                     body,
                     trailingConst,
                     access,
@@ -1330,6 +1408,62 @@ export function createParser(tokens, knownTypes)
         known.add(decl.name);
         expect(";");
         return { kind: "typedef", name: decl.name, typeName: typeToString(spec.type), line };
+    }
+
+    function parseEnum()
+    {
+        const line = tok().line;
+        expect("enum");
+        if (at("class") || at("struct"))
+        {
+            error("enum class is not supported");
+        }
+        let name = null;
+        if (tok().type === "ident" && !at("{"))
+        {
+            name = consumeIdent();
+            known.add(name);
+        }
+        expect("{");
+        const enumerators = [];
+        let next = 0;
+        if (!at("}"))
+        {
+            while (true)
+            {
+                const ename = consumeIdent();
+                let init = null;
+                if (at("="))
+                {
+                    consume();
+                    init = parseAssignExpr();
+                    next = null;
+                }
+                else
+                {
+                    if (next == null)
+                    {
+                        error("Enumerator '" + ename + "' needs a value");
+                    }
+                    init = { kind: "literal", value: next, float: false, line: tok().line };
+                    next++;
+                }
+                enumerators.push({ name: ename, init });
+                if (at(","))
+                {
+                    consume();
+                    if (at("}"))
+                    {
+                        break;
+                    }
+                    continue;
+                }
+                break;
+            }
+        }
+        expect("}");
+        expect(";");
+        return { kind: "enum", name, enumerators, line };
     }
 
     function parseUsing()
@@ -1494,6 +1628,11 @@ export function createParser(tokens, knownTypes)
             if (isClassDefAhead())
             {
                 decls.push(parseClass());
+                continue;
+            }
+            if (tok().type === "ident" && tok().value === "enum")
+            {
+                decls.push(parseEnum());
                 continue;
             }
             decls.push(parseVarsOrFunction());

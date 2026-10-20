@@ -1,6 +1,6 @@
 # Matrix bench
 
-A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), [matrixclock](https://github.com/clogwog/matrixclock), [tetrisclock](https://github.com/clogwog/tetrisclock), and [plasmaclock](https://github.com/clogwog/plasmaclock). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
+A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), [matrixclock](https://github.com/clogwog/matrixclock), [tetrisclock](https://github.com/clogwog/tetrisclock), [plasmaclock](https://github.com/clogwog/plasmaclock), [snakeclock](https://github.com/clogwog/snakeclock), and [marioclock](https://github.com/clogwog/marioclock). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
 
 The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/projects/panel-player/).
 
@@ -9,6 +9,8 @@ The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/project
 - [Matrix Clock](https://clogwog.net/projects/panel-player/?project=matrixclock)
 - [Tetris Clock](https://clogwog.net/projects/panel-player/?project=tetrisclock)
 - [Plasma Clock](https://clogwog.net/projects/panel-player/?project=plasmaclock)
+- [Snake Clock](https://clogwog.net/projects/panel-player/?project=snakeclock)
+- [Mario Clock](https://clogwog.net/projects/panel-player/?project=marioclock)
 
 ![Pac-Man Clock at 14:35](docs/preview/pacmanclock-1435.png)
 
@@ -21,6 +23,10 @@ The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/project
 ![Tetris Clock at 14:35, pieces still falling](docs/preview/tetrisclock-1435.png)
 
 ![Plasma Clock at 14:35, time cut out of the field](docs/preview/plasmaclock-1435.png)
+
+![Snake Clock at 14:35, the snake a few steps in](docs/preview/snakeclock-1435.png)
+
+![Mario Clock at 14:35, Mario walking under the digits](docs/preview/marioclock-1435.png)
 
 ## Run it
 
@@ -39,8 +45,10 @@ The page reads a `project` query parameter. These open a project directly:
 - `?project=matrixclock`
 - `?project=tetrisclock`
 - `?project=plasmaclock`
+- `?project=snakeclock`
+- `?project=marioclock`
 
-`?brightness=` is optional and runs from 0 to 160. 0 shows the raw `SetPixel` bytes. 100 encodes them as sRGB. 140, the default, goes a step past that so Tetris (channels near 51), Pong digits (100), Pong’s centre dashes (10), and Plasma (scaled by 0.5) read more like a real panel. 255 stays full, so Pac-Man and Matrix do not clip. An off LED is black and has no centre dot, so it is never lighter than a dim lit one. The Screen slider remembers the choice in `localStorage`.
+`?brightness=` is optional and runs from 0 to 160. 0 shows the raw `SetPixel` bytes. 100 encodes them as sRGB. 140, the default, goes a step past that so Tetris (channels near 51), Pong digits (100), Pong’s centre dashes (10), Plasma (scaled by 0.5), Snake (body 80, clock at HSV value 0.4), and Mario (every channel multiplied by 0.5) read more like a real panel. 255 stays full, so Pac-Man and Matrix do not clip. An off LED is black and has no centre dot, so it is never lighter than a dim lit one. The Screen slider remembers the choice in `localStorage`.
 
 A missing or unknown project starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
 
@@ -60,7 +68,7 @@ Node’s built-in test runner is enough. No extra packages.
 npm test
 ```
 
-The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the three ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit), tetrisclock (17 grey second-frame pixels at 14:35:08, then falling tetrominoes that land on later frames), and plasmaclock (the 14:35 glyphs from `10x20.bdf` are black, the rest of the panel is plasma, and the next frame moves).
+The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the clock ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit), tetrisclock (17 grey second-frame pixels at 14:35:08, then falling tetrominoes that land on later frames), plasmaclock (the 14:35 glyphs from `10x20.bdf` are black, the rest of the panel is plasma, and the next frame moves), snakeclock (a 14:35:08 frame with one red apple, a green snake, and time pixels that are neither), and marioclock (gold 14:35 at the first frame, Mario’s hat on the panel after 138 steps, then the minute digit 6 after the clock jumps to 14:36).
 
 Regenerate the README pictures with:
 
@@ -87,10 +95,12 @@ npm run preview
 | `src/projects/matrixclock/` | Vendored Matrix Clock sources, digit masks, font, system stubs, adapter |
 | `src/projects/tetrisclock/` | Vendored Tetris Clock sources, piece tables, system stubs, adapter |
 | `src/projects/plasmaclock/` | Vendored Plasma Clock sources, 10×20 font, system stubs, adapter |
-| `src/matrix/bdf.js` | BDF loader used by the Pong Clock host `DrawText` |
+| `src/projects/snakeclock/` | Vendored Snake Clock sources, digit font, system stubs, adapter |
+| `src/projects/marioclock/` | Vendored Mario Clock sources, sprite tables, system stubs, adapter |
+| `src/matrix/bdf.js` | BDF loader used by the host `DrawText` |
 | `index.html` | The bench UI |
 
-`VirtualMatrix` is the shared pixel buffer (`SetPixel`, `Clear`, `Fill`). `createClock()` is the shared time source (`time`, `localtime`, `gettimeofday`). `BitmapFont` is the shared glyph drawer for a future project written in JavaScript. Pac-Man Clock does not call `BitmapFont`; its digits are the `bool` tables in `digit.cc`, drawn by the interpreted `Digit::hittest`. Pong Clock’s digits come from `pongnumberfont.bdf` through the host `rgb_matrix::DrawText`. Matrix Clock loads that same BDF so `main` continues, and draws its digits from the `bool` masks in `number.cc`. Plasma Clock draws the hour and minute with `10x20.bdf` through the same host `DrawText`, in black, on top of the plasma.
+`VirtualMatrix` is the shared pixel buffer (`SetPixel`, `Clear`, `Fill`). `createClock()` is the shared time source (`time`, `localtime`, `localtime_r`, `gettimeofday`). `BitmapFont` is the shared glyph drawer for a future project written in JavaScript. Pac-Man Clock does not call `BitmapFont`; its digits are the `bool` tables in `digit.cc`, drawn by the interpreted `Digit::hittest`. Pong Clock’s digits come from `pongnumberfont.bdf` through the host `rgb_matrix::DrawText`. Matrix Clock loads that same BDF so `main` continues, and draws its digits from the `bool` masks in `number.cc`. Plasma Clock draws the hour and minute with `10x20.bdf` through the same host `DrawText`, in black, on top of the plasma. Snake Clock draws `HH:MM:SS` with `pongnumberfont.bdf`. Mario Clock draws `HH:MM` from the `const char*` digit tables in `marioclock.cc` and the Mario walk from the sprite tables in the same file.
 
 ## Adding a project
 
@@ -229,21 +239,43 @@ Interpreted from the current upstream sources:
 - One frame per `usleep(100000)`. The bench waits about 100&nbsp;ms between steps
 - Added to the subset for this clock: `sin`, `cos`, `sqrt`, and `fabs`
 
+## What snakeclock does here
+
+Interpreted from the current upstream sources:
+
+- The snake starts as one green cell `(0, 80, 0)` at the centre. The apple starts on that same cell, red `(80, 0, 0)`, so the first frame moves the apple and the snake grows
+- Each later frame drops the tail unless the head is on the apple, then steps one cell toward the apple. It will not reverse, and it stops at the edge instead of wrapping
+- `HH:MM:SS` comes from `pongnumberfont.bdf`. The string is measured with an off-screen `DrawText`, then drawn from the right with a 3-pixel margin. The font has no colon, so the glyphs are the six digits
+- The clock colour is HSV with value 0.4. Hue swings from red to green over 12 seconds, and saturation dips through white
+- One frame per `usleep(200000)`. The bench waits about 200&nbsp;ms between steps
+- Added to the subset for this clock: `deque` (`push_front`, `front`), a `struct` constructor with `: field(arg)`, `static_cast`, `fmod`, `floor`, `sinf`, `cosf`, `strftime` (`%H`, `%M`, `%S`), `localtime_r`, a lambda with `[&]` and a trailing return type, and `for (const Point &p : deque)`. The 8-argument `DrawText` reads the text from the seventh argument and adds the letter spacing
+
+## What marioclock does here
+
+Interpreted from the current upstream sources:
+
+- `HH:MM` is 3×5 digits from the `DIGITS` tables, coin gold `(240, 200, 60)`, then multiplied by `DIM_FACTOR` 0.5, so the panel sees `(120, 100, 30)`. The block starts at x=7, y=1
+- Mario is a 15×15 walk of four frames from the `MARIO` tables. Red, peach, brown, blue, and white are halved the same way. Black (`K`) stays off
+- He enters from the left at x=-15, y=17, steps every 6 ticks, leaves on the right, waits, then mirrors and walks back
+- When the minute changes, the old time stays until he is at x=13. He jumps to y=6, the minute digits fly off the top, hide, and the new minute falls back. He keeps the direction he had
+- One frame per `usleep(25000)`. The bench waits about 25&nbsp;ms between steps
+- Added to the subset for this clock: `enum`, `const char*` sprite tables (indexing a string yields a character code), reference parameters, `static inline`, a lambda with `[]`, and chained assignment `r = g = b = 0`
+
 ## What is not simulated
 
-- A general template system. The subset knows `vector<T>`, `shared_ptr<T>` as the object itself (no control block or `use_count`), `make_shared<T>(...)`, and `vector::begin` / `erase` combined with iterator `+`. A `>>` token can close two template argument lists
-- Inheritance, virtual calls, exceptions, lambdas, operator overloading, namespaces as scopes
+- A general template system. The subset knows `vector<T>`, `deque<T>` (the same object, plus `push_front` and `front`), `shared_ptr<T>` as the object itself (no control block or `use_count`), `make_shared<T>(...)`, and `vector::begin` / `erase` combined with iterator `+`. A `>>` token can close two template argument lists
+- Inheritance, virtual calls, exceptions, operator overloading, namespaces as scopes. Lambdas are `[]` or `[&]` with an optional trailing return type; the body sees the enclosing locals. `[=]` is accepted and still sees those live locals. `enum class` is not supported. `strftime` replaces `%H`, `%M`, and `%S`
 - Preprocessor tricks beyond object-like macros, simple function-like macros, includes, and include guards. `#if` only handles `0`, `1`, and `defined`
-- References other than reference parameters and `for (auto& x : vec)`
+- References other than reference parameters and range-for (`for (auto& x : vec)` or `for (const Point &p : deque)`)
 - Pointer arithmetic, arrays above 2D, and most of the standard library
 - In-class fixed arrays are allocated. A read past the end of a plain array returns 0, and a write past the end is ignored. `vector` still throws. Matrix Clock indexes `localstrength[32]` once a streak’s head is past the last row; that y is already off the panel
 - `cout` / `operator<<` (the font-failure branch parses, and is not taken when the BDF loads)
-- The rest of `graphics.cc` beyond `LoadFont`, `baseline`, and the 6-argument `DrawText` (ink pixels only, no background colour). Matrix Clock never calls `DrawText`. Tetris Clock’s `drawChar` mentions a `Font*` that `main` never sets. Plasma Clock calls `DrawText` with black ink
-- `thematrix.gif` from upstream (about 14&nbsp;MB). Matrix Clock does not open it. Tetris Clock’s README points at a remote gif; that file is not in the repo. Plasma Clock’s README points at `plasmaclock.gif`; that file is not in the repo. The compiled `plasmaclock` binary is not vendored either
+- The rest of `graphics.cc` beyond `LoadFont`, `baseline`, and `DrawText` (ink pixels only, no background colour). The 6-argument form takes the text in the last argument. The 8-argument form takes a background pointer, then the text, then letter spacing. Matrix Clock never calls `DrawText`. Tetris Clock’s `drawChar` mentions a `Font*` that `main` never sets. Plasma Clock calls `DrawText` with black ink. Snake Clock calls the 8-argument form with a null background and spacing 0
+- `thematrix.gif` from upstream (about 14&nbsp;MB). Matrix Clock does not open it. Tetris Clock’s README points at a remote gif; that file is not in the repo. Plasma Clock’s README points at `plasmaclock.gif`; that file is not in the repo. The compiled `plasmaclock` binary is not vendored either. Mario Clock’s README points at `imagesrc/mario-change-of-minute.gif` (about 8&nbsp;MB); the walk is the ASCII tables, so the gif and the layer PNGs are not vendored
 - `scale` above 1 and `drawLargerShape`. Tetris Clock leaves `scale` at 1
-- PWM, hardware pulsing, multi-panel chains beyond `width = cols * chain_length`, and brightness applied inside `SetPixel`. Pac-Man Clock sets driver brightness to 50. Pong Clock, Matrix Clock, Tetris Clock, and Plasma Clock leave it at 100. Tetris Clock scales its colours by 0.2. Plasma Clock scales its colours by 0.5. The bench shows the raw pixel values and prints the driver setting beside the panel
+- PWM, hardware pulsing, multi-panel chains beyond `width = cols * chain_length`, and brightness applied inside `SetPixel`. Pac-Man Clock sets driver brightness to 50. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, and Mario Clock leave it at 100. Tetris Clock scales its colours by 0.2. Plasma Clock scales its colours by 0.5. Snake Clock’s body is `(0, 80, 0)` and its clock uses HSV value 0.4. Mario Clock multiplies every channel by 0.5. The bench shows the raw pixel values and prints the driver setting beside the panel
 - Signals, syslog output, and a GPIO init failure. `interrupt_received` stays false, so the loops run until you leave the page
-- A real `usleep` delay inside the interpreter. The bench paces Pong Clock and Matrix Clock at 25&nbsp;ms per frame, Plasma Clock at 100&nbsp;ms, and Tetris Clock at 125&nbsp;ms, and does not catch up if a frame is late
+- A real `usleep` delay inside the interpreter. The bench paces Pong Clock, Matrix Clock, and Mario Clock at 25&nbsp;ms per frame, Plasma Clock at 100&nbsp;ms, Tetris Clock at 125&nbsp;ms, and Snake Clock at 200&nbsp;ms, and does not catch up if a frame is late
 - `strcpy` into the unused `line[6]` buffer is implemented, and nothing reads that buffer
 - The optional `<seconds>` quit timer, unless a host passes `argc` / `argv`. The bench passes `argc == 1`
 - Catch-up if a Pac-Man frame is late: the C++ steps at most once per refresh, and the interpreter does the same
@@ -259,3 +291,7 @@ Interpreted from the current upstream sources:
 `src/projects/tetrisclock/sources/tetrisclock.cpp`, `TetrisMatrixDraw.cpp`, `TetrisMatrixDraw.h`, `TetrisNumbers.h`, and `TetrisLetters.h` are from [clogwog/tetrisclock](https://github.com/clogwog/tetrisclock) at `706b526468e9ce17cfddedb0a25e2b69552aab10`. The piece tables are the font. `TetrisMatrixDraw` carries Tobias Blum’s LGPL-2.1 header. The RGB-matrix library itself is not vendored.
 
 `src/projects/plasmaclock/sources/plasmaclock.cpp`, `10x20.bdf`, and `pongnumberfont.bdf` are from [clogwog/plasmaclock](https://github.com/clogwog/plasmaclock) at `7e7d5bdf1212812002f4433e6d1ab23efca36bfa`. The clock loads `10x20.bdf`. `pongnumberfont.bdf` is in the upstream tree and is not opened. Both font files say they are public domain. The RGB-matrix library itself is not vendored.
+
+`src/projects/snakeclock/sources/snakeclock.cpp` and `pongnumberfont.bdf` are from [clogwog/snakeclock](https://github.com/clogwog/snakeclock) at `6e826761ee70d15421847b22fac9352bdc0f1eb5`. The font file says it is public domain. The RGB-matrix library under upstream `include/` and `lib/` is not vendored.
+
+`src/projects/marioclock/sources/marioclock.cc` is from [clogwog/marioclock](https://github.com/clogwog/marioclock) at `0f102ec53d3da5ac2f124a575e4ccfdaa5ebe826`. The sprite tables are the font. Upstream `imagesrc/` is not vendored. The RGB-matrix library itself is not vendored.

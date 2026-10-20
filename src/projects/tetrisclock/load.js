@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261022";
+import { withAssetVersion } from "../../version.js?v=20261023";
 
 const FILES = [
     "sources/tetrisclock.cpp",

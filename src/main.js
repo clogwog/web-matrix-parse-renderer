@@ -1,9 +1,9 @@
-import { BUILD_VERSION } from "./version.js?v=20261022";
-import { createClock } from "./matrix/clock.js?v=20261022";
-import { findProject, listProjects } from "./projects/registry.js?v=20261022";
-import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261022";
-import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261022";
-import { PanelView } from "./render/panel-view.js?v=20261022";
+import { BUILD_VERSION } from "./version.js?v=20261023";
+import { createClock } from "./matrix/clock.js?v=20261023";
+import { findProject, listProjects } from "./projects/registry.js?v=20261023";
+import { locationWithProject, resolveProjectId } from "./projects/url.js?v=20261023";
+import { brightnessFromQuery, DEFAULT_DISPLAY_BRIGHTNESS, DISPLAY_BRIGHTNESS_MAX, DISPLAY_STORAGE_KEY, locationWithBrightness, parseBrightness } from "./render/display.js?v=20261023";
+import { PanelView } from "./render/panel-view.js?v=20261023";
 
 const description = document.querySelector("#description");
 const repoLink = document.querySelector("#repo");
