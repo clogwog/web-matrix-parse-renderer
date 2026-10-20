@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261025";
-import { createSession } from "../../cpp/interpreter.js?v=20261025";
-import { MatrixProject } from "../project.js?v=20261025";
-import { PLASMA_ENTRIES, loadPlasmaFiles } from "./load.js?v=20261025";
+import { compileSources } from "../../cpp/compile.js?v=20261026";
+import { createSession } from "../../cpp/interpreter.js?v=20261026";
+import { MatrixProject } from "../project.js?v=20261026";
+import { PLASMA_ENTRIES, loadPlasmaFiles } from "./load.js?v=20261026";
 
 const DESCRIPTION = "A plasma field fills the panel, and the local time is cut out of it in black. Interpreted from clogwog/plasmaclock.";
 const SHOWS = "Swirling colour covers the matrix. Hour and minute digits stay black.";

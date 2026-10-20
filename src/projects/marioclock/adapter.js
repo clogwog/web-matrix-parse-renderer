@@ -1,7 +1,7 @@
-import { compileSources } from "../../cpp/compile.js?v=20261025";
-import { createSession } from "../../cpp/interpreter.js?v=20261025";
-import { MatrixProject } from "../project.js?v=20261025";
-import { MARIO_ENTRIES, loadMarioFiles } from "./load.js?v=20261025";
+import { compileSources } from "../../cpp/compile.js?v=20261026";
+import { createSession } from "../../cpp/interpreter.js?v=20261026";
+import { MatrixProject } from "../project.js?v=20261026";
+import { MARIO_ENTRIES, loadMarioFiles } from "./load.js?v=20261026";
 
 const DESCRIPTION = "Mario walks the bottom of the panel under a gold HH:MM, and jumps to knock the minute digits away when they change. Interpreted from clogwog/marioclock.";
 const SHOWS = "Four walk frames, a mirrored return trip, and a bump that launches the old minute off the top.";

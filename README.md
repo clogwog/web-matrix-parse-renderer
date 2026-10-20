@@ -1,6 +1,6 @@
 # Matrix bench
 
-A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), [matrixclock](https://github.com/clogwog/matrixclock), [tetrisclock](https://github.com/clogwog/tetrisclock), [plasmaclock](https://github.com/clogwog/plasmaclock), [snakeclock](https://github.com/clogwog/snakeclock), [marioclock](https://github.com/clogwog/marioclock), [gameoflifegame](https://github.com/clogwog/gameoflifegame), and [dancemonkey](https://github.com/clogwog/dancemonkey). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
+A browser simulator for a 32×32 RGB LED matrix. The registered projects are [pacmanclock](https://github.com/clogwog/pacmanclock), [pongclock](https://github.com/clogwog/pongclock), [matrixclock](https://github.com/clogwog/matrixclock), [tetrisclock](https://github.com/clogwog/tetrisclock), [plasmaclock](https://github.com/clogwog/plasmaclock), [snakeclock](https://github.com/clogwog/snakeclock), [marioclock](https://github.com/clogwog/marioclock), [gameoflifegame](https://github.com/clogwog/gameoflifegame), [dancemonkey](https://github.com/clogwog/dancemonkey), and [rexie](https://github.com/clogwog/rexie). The page loads each program’s C++ and runs it on a virtual panel of round, glowing pixels. Clocks use this computer’s local time.
 
 The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/projects/panel-player/).
 
@@ -13,6 +13,7 @@ The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/project
 - [Mario Clock](https://clogwog.net/projects/panel-player/?project=marioclock)
 - [Game of Life](https://clogwog.net/projects/panel-player/?project=gameoflifegame)
 - [Dance Monkey](https://clogwog.net/projects/panel-player/?project=dancemonkey)
+- [Rexie](https://clogwog.net/projects/panel-player/?project=rexie)
 
 ![Pac-Man Clock at 14:35](docs/preview/pacmanclock-1435.png)
 
@@ -33,6 +34,8 @@ The live demo is [clogwog.net/projects/panel-player](https://clogwog.net/project
 ![Game of Life at 14:35, a few generations in](docs/preview/gameoflifegame-1435.png)
 
 ![Dance Monkey at 14:35, a mid-dance frame](docs/preview/dancemonkey-1435.png)
+
+![Rexie at 14:35, the dinosaur a few frames in](docs/preview/rexie-1435.png)
 
 ## Run it
 
@@ -55,8 +58,9 @@ The page reads a `project` query parameter. These open a project directly:
 - `?project=marioclock`
 - `?project=gameoflifegame`
 - `?project=dancemonkey`
+- `?project=rexie`
 
-`?brightness=` is optional and runs from 0 to 160. 0 shows the raw `SetPixel` bytes. Above 0, the strongest channel is lifted (100 is the sRGB step, 140 the default, 160 the top) and the other channels follow the RGB-matrix CIE1931 curve, the same curve `SetPixel` applies before PWM. That keeps a pastel sprite’s hue. Tetris (channels near 51), Pong digits (100), Pong’s centre dashes (10), Plasma (scaled by 0.5), Snake (body 80, clock at HSV value 0.4), Mario (every channel multiplied by 0.5), Game of Life (channels scaled by 0.5), and Dance Monkey (sprite scaled by 0.2, clock ink at 20) still brighten with the slider. 255 stays full, so Pac-Man and Matrix do not clip. An off LED is black and has no centre dot, so it is never lighter than a dim lit one. The Screen slider remembers the choice in `localStorage`.
+`?brightness=` is optional and runs from 0 to 160. 0 shows the raw `SetPixel` bytes. Above 0, the strongest channel is lifted (100 is the sRGB step, 140 the default, 160 the top) and the other channels follow the RGB-matrix CIE1931 curve, the same curve `SetPixel` applies before PWM. That keeps a pastel sprite’s hue. Tetris (channels near 51), Pong digits (100), Pong’s centre dashes (10), Plasma (scaled by 0.5), Snake (body 80, clock at HSV value 0.4), Mario (every channel multiplied by 0.5), Game of Life (channels scaled by 0.5), Dance Monkey, and Rexie (sprite scaled by 0.2, clock ink at 20) still brighten with the slider. 255 stays full, so Pac-Man and Matrix do not clip. An off LED is black and has no centre dot, so it is never lighter than a dim lit one. The Screen slider remembers the choice in `localStorage`.
 
 A missing or unknown project starts Pac-Man Clock, the same project as a visit with no query. Other parameters stay on the URL. The first load uses `history.replaceState` so the address names the running project. Choosing an icon uses `history.pushState`, which keeps the link shareable and lets Back return to the previous project. The path is whatever page you opened, including `/projects/panel-player/`.
 
@@ -76,7 +80,7 @@ Node’s built-in test runner is enough. No extra packages.
 npm test
 ```
 
-The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the clock ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit), tetrisclock (17 grey second-frame pixels at 14:35:08, then falling tetrominoes that land on later frames), plasmaclock (the 14:35 glyphs from `10x20.bdf` are black, the rest of the panel is plasma, and the next frame moves), snakeclock (a 14:35:08 frame with one red apple, a green snake, and time pixels that are neither), marioclock (gold 14:35 at the first frame, Mario’s hat on the panel after 138 steps, then the minute digit 6 after the clock jumps to 14:36), gameoflifegame (531 orange cells at the seeded 14:35:08 start, then a later frame that is no longer only that orange), and dancemonkey (141×3072 sprite rows, grey 14:35 and a skin pixel on the first frame, a changed second frame, and `done` after the two passes).
+The tests cover the preprocessor (digit macros, include guards), a small interpreted drawing program (integer division, reference parameters, `SetPixel`), default arguments and in-class initializers, the `?project=` parser (the clock ids, unknown values, and a subpath that keeps its other parameters), pacmanclock (parsed colours, the 3×5 digit tables, the right-facing mouth sprite, a 14:35 frame, and movement after the 80&nbsp;ms step), pongclock (a 14:35 frame with BDF digits, centre dashes, the second-hand row, paddles, and a ball that moves on the next `usleep`), matrixclock (digits still 0 for 14 frames, then 14:35 on the 15th, with the rain moving and a full-green mask pixel once a streak crosses a digit), tetrisclock (17 grey second-frame pixels at 14:35:08, then falling tetrominoes that land on later frames), plasmaclock (the 14:35 glyphs from `10x20.bdf` are black, the rest of the panel is plasma, and the next frame moves), snakeclock (a 14:35:08 frame with one red apple, a green snake, and time pixels that are neither), marioclock (gold 14:35 at the first frame, Mario’s hat on the panel after 138 steps, then the minute digit 6 after the clock jumps to 14:36), gameoflifegame (531 orange cells at the seeded 14:35:08 start, then a later frame that is no longer only that orange), dancemonkey (141×3072 sprite rows, grey 14:35 and a skin pixel on the first frame, a changed second frame, and `done` after the two passes), and rexie (80×3072 sprite rows, grey 14:35 and a `(34, 34, 34)` body pixel on the first frame, a changed second frame, and `done` after the two passes).
 
 Regenerate the README pictures with:
 
@@ -107,10 +111,11 @@ npm run preview
 | `src/projects/marioclock/` | Vendored Mario Clock sources, sprite tables, system stubs, adapter |
 | `src/projects/gameoflifegame/` | Vendored Game of Life sources, digit font, system stubs, adapter |
 | `src/projects/dancemonkey/` | Vendored Dance Monkey sources, sprite header, digit font, system stubs, adapter |
+| `src/projects/rexie/` | Vendored Rexie sources, sprite header, digit font, system stubs, adapter |
 | `src/matrix/bdf.js` | BDF loader used by the host `DrawText` |
 | `index.html` | The bench UI |
 
-`VirtualMatrix` is the shared pixel buffer (`SetPixel`, `Clear`, `Fill`). `createClock()` is the shared time source (`time`, `localtime`, `localtime_r`, `gettimeofday`). `BitmapFont` is the shared glyph drawer for a future project written in JavaScript. Pac-Man Clock does not call `BitmapFont`; its digits are the `bool` tables in `digit.cc`, drawn by the interpreted `Digit::hittest`. Pong Clock’s digits come from `pongnumberfont.bdf` through the host `rgb_matrix::DrawText`. Matrix Clock loads that same BDF so `main` continues, and draws its digits from the `bool` masks in `number.cc`. Plasma Clock draws the hour and minute with `10x20.bdf` through the same host `DrawText`, in black, on top of the plasma. Snake Clock draws `HH:MM:SS` with `pongnumberfont.bdf`. Mario Clock draws `HH:MM` from the `const char*` digit tables in `marioclock.cc` and the Mario walk from the sprite tables in the same file. Game of Life loads `pongnumberfont.bdf` and does not draw with it. Dance Monkey draws `HH:MM` with that font on top of the `brent.h` frames.
+`VirtualMatrix` is the shared pixel buffer (`SetPixel`, `Clear`, `Fill`). `createClock()` is the shared time source (`time`, `localtime`, `localtime_r`, `gettimeofday`). `BitmapFont` is the shared glyph drawer for a future project written in JavaScript. Pac-Man Clock does not call `BitmapFont`; its digits are the `bool` tables in `digit.cc`, drawn by the interpreted `Digit::hittest`. Pong Clock’s digits come from `pongnumberfont.bdf` through the host `rgb_matrix::DrawText`. Matrix Clock loads that same BDF so `main` continues, and draws its digits from the `bool` masks in `number.cc`. Plasma Clock draws the hour and minute with `10x20.bdf` through the same host `DrawText`, in black, on top of the plasma. Snake Clock draws `HH:MM:SS` with `pongnumberfont.bdf`. Mario Clock draws `HH:MM` from the `const char*` digit tables in `marioclock.cc` and the Mario walk from the sprite tables in the same file. Game of Life loads `pongnumberfont.bdf` and does not draw with it. Dance Monkey draws `HH:MM` with that font on top of the `brent.h` frames. Rexie draws `HH:MM` with that font on top of the `rexieanimation.h` frames.
 
 ## Adding a project
 
@@ -193,7 +198,7 @@ Interpreted from the current upstream sources:
 - Step about every 80&nbsp;ms of wall time
 - Local hour and minute (`localtime`), 24-hour
 
-The picker is the registry. Pac-Man Clock, Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, and Dance Monkey are registered.
+The picker is the registry. Pac-Man Clock, Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, Dance Monkey, and Rexie are registered.
 
 ## What pongclock does here
 
@@ -297,6 +302,19 @@ Interpreted from the current upstream sources:
 - One frame per `usleep(100000)`. The bench waits about 100&nbsp;ms between steps
 - Added to the subset for this program: an unsized outer dimension on a 2D array, a parameter `const uint8_t icons[][bmsize]`, and the same `cout` stream on the font-failure branch
 
+## What rexie does here
+
+Interpreted from the current upstream sources:
+
+- `rexieanimation.h` is 80 frames of 32×32 RGB, `const uint8_t animation_icons[][bmsize]` with `bmsize` `(32 * 32 * 3)`. The first dimension is taken from the brace list
+- Between 07:00 and 22:00 the sprite scale is 0.2 and the clock ink is `(20, 20, 20)`. Outside that the scale is 0.1 and the ink is `(10, 10, 10)`. A grey body byte `172` is stored as `(34, 34, 34)`
+- `DrawIcon` repaints a pixel only when its RGB differs from the previous frame. Frame 0 paints the whole picture
+- `HH` is drawn at baseline y=8, x=0, and `MM` at x=21, both from `pongnumberfont.bdf`. A one-digit hour or minute is padded with `insert(0, 1, '0')`
+- `time_t t` is sampled once, before the loops, so the digits stay on that minute
+- The animation plays twice (`repeat <= 1`), then `main` returns. That is 160 frames, and the next step reports the program finished
+- One frame per `usleep(150000)`. The bench waits about 150&nbsp;ms between steps
+- The same subset as Dance Monkey covers this program. No new C++ constructs were required
+
 ## What is not simulated
 
 - A general template system. The subset knows `vector<T>`, `deque<T>` (the same object, plus `push_front` and `front`), `shared_ptr<T>` as the object itself (no control block or `use_count`), `make_shared<T>(...)`, and `vector::begin` / `erase` combined with iterator `+`. A `>>` token can close two template argument lists
@@ -309,9 +327,9 @@ Interpreted from the current upstream sources:
 - The rest of `graphics.cc` beyond `LoadFont`, `baseline`, and `DrawText` (ink pixels only, no background colour). The 6-argument form takes the text in the last argument. The 8-argument form takes a background pointer, then the text, then letter spacing. Matrix Clock never calls `DrawText`. Tetris Clock’s `drawChar` mentions a `Font*` that `main` never sets. Plasma Clock calls `DrawText` with black ink. Snake Clock calls the 8-argument form with a null background and spacing 0
 - `thematrix.gif` from upstream (about 14&nbsp;MB). Matrix Clock does not open it. Tetris Clock’s README points at a remote gif; that file is not in the repo. Plasma Clock’s README points at `plasmaclock.gif`; that file is not in the repo. The compiled `plasmaclock` binary is not vendored either. Mario Clock’s README points at `imagesrc/mario-change-of-minute.gif` (about 8&nbsp;MB); the walk is the ASCII tables, so the gif and the layer PNGs are not vendored
 - `scale` above 1 and `drawLargerShape`. Tetris Clock leaves `scale` at 1
-- PWM bitplanes and multi-panel chains beyond `width = cols * chain_length`. The screen does apply the library’s CIE1931 channel ratios (11 bitplanes, luminance correction on, brightness 100) when the slider is above 0. Pac-Man Clock’s driver brightness of 50 is still only the label beside the panel, not a second dimmer. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, and Dance Monkey leave driver brightness at 100. Tetris Clock scales its colours by 0.2. Plasma Clock scales its colours by 0.5. Snake Clock’s body is `(0, 80, 0)` and its clock uses HSV value 0.4. Mario Clock multiplies every channel by 0.5. Game of Life multiplies its blend by 0.5. Dance Monkey multiplies sprite bytes by 0.2 during the day and 0.1 at night. The bench shows the raw pixel values and prints the driver setting beside the panel
+- PWM bitplanes and multi-panel chains beyond `width = cols * chain_length`. The screen does apply the library’s CIE1931 channel ratios (11 bitplanes, luminance correction on, brightness 100) when the slider is above 0. Pac-Man Clock’s driver brightness of 50 is still only the label beside the panel, not a second dimmer. Pong Clock, Matrix Clock, Tetris Clock, Plasma Clock, Snake Clock, Mario Clock, Game of Life, Dance Monkey, and Rexie leave driver brightness at 100. Tetris Clock scales its colours by 0.2. Plasma Clock scales its colours by 0.5. Snake Clock’s body is `(0, 80, 0)` and its clock uses HSV value 0.4. Mario Clock multiplies every channel by 0.5. Game of Life multiplies its blend by 0.5. Dance Monkey and Rexie multiply sprite bytes by 0.2 during the day and 0.1 at night. The bench shows the raw pixel values and prints the driver setting beside the panel
 - Signals, syslog output, and a GPIO init failure. `interrupt_received` stays false, so the loops run until you leave the page
-- A real `usleep` delay inside the interpreter. The bench paces Pong Clock, Matrix Clock, and Mario Clock at 25&nbsp;ms per frame, Plasma Clock and Dance Monkey at 100&nbsp;ms, Tetris Clock at 125&nbsp;ms, Snake Clock at 200&nbsp;ms, and Game of Life at 75&nbsp;ms. Game of Life’s own delay is `animationSpeed` milliseconds (30–179). The bench does not catch up if a frame is late
+- A real `usleep` delay inside the interpreter. The bench paces Pong Clock, Matrix Clock, and Mario Clock at 25&nbsp;ms per frame, Plasma Clock and Dance Monkey at 100&nbsp;ms, Rexie at 150&nbsp;ms, Tetris Clock at 125&nbsp;ms, Snake Clock at 200&nbsp;ms, and Game of Life at 75&nbsp;ms. Game of Life’s own delay is `animationSpeed` milliseconds (30–179). The bench does not catch up if a frame is late
 - `strcpy` into the unused `line[6]` buffer is implemented, and nothing reads that buffer
 - The optional `<seconds>` quit timer, unless a host passes `argc` / `argv`. The bench passes `argc == 1`
 - Catch-up if a Pac-Man frame is late: the C++ steps at most once per refresh, and the interpreter does the same
@@ -335,3 +353,5 @@ Interpreted from the current upstream sources:
 `src/projects/gameoflifegame/sources/gameoflife.cc` and `pongnumberfont.bdf` are from [clogwog/gameoflifegame](https://github.com/clogwog/gameoflifegame) at `63cf8735b739f42ae3260711f468dc74dd8d6f5d`. The font file says it is public domain. Upstream `life-finds-a-way.gif` is not vendored. The RGB-matrix library under upstream `include/` and `lib/` is not vendored.
 
 `src/projects/dancemonkey/sources/dancemonkey.cpp`, `brent.h`, and `pongnumberfont.bdf` are from [clogwog/dancemonkey](https://github.com/clogwog/dancemonkey) at `295799705fe849100fe6a6e8742a58d8adef3400`. The sprite header is the font. Upstream `brent.gif` and `david_brent_monkey_dance.gif` are not vendored. The RGB-matrix library under upstream `include/` and `lib/` is not vendored.
+
+`src/projects/rexie/sources/rexie.cpp`, `rexieanimation.h`, and `pongnumberfont.bdf` are from [clogwog/rexie](https://github.com/clogwog/rexie) at `2e2411079a15f18e653fff8c09d1ee9206a34783`. The sprite header is generated from the upstream `icons/*.bmp` files, which are not vendored separately. The RGB-matrix library under upstream `include/` and `lib/` is not vendored.

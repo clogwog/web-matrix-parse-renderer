@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261025";
+import { withAssetVersion } from "../../version.js?v=20261026";
 
 const FILES = [
     "sources/marioclock.cc",

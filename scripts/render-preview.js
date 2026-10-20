@@ -11,6 +11,7 @@ import { SNAKE_ENTRIES, loadSnakeFiles } from "../src/projects/snakeclock/load.j
 import { MARIO_ENTRIES, loadMarioFiles } from "../src/projects/marioclock/load.js";
 import { LIFE_ENTRIES, loadLifeFiles } from "../src/projects/gameoflifegame/load.js";
 import { DANCE_ENTRIES, loadDanceFiles } from "../src/projects/dancemonkey/load.js";
+import { REXIE_ENTRIES, loadRexieFiles } from "../src/projects/rexie/load.js";
 import { encodePng } from "../src/render/encode-png.js";
 import { rasterPanel } from "../src/render/raster-panel.js";
 
@@ -32,6 +33,8 @@ const lifeFiles = await loadLifeFiles();
 const lifeProgram = compileSources(lifeFiles, LIFE_ENTRIES);
 const danceFiles = await loadDanceFiles();
 const danceProgram = compileSources(danceFiles, DANCE_ENTRIES);
+const rexieFiles = await loadRexieFiles();
+const rexieProgram = compileSources(rexieFiles, REXIE_ENTRIES);
 
 function downscale(src, srcW, srcH, dstW, dstH)
 {
@@ -105,3 +108,4 @@ await shoot("snakeclock-1435.png", snakeProgram, new Date(2026, 9, 16, 14, 35, 8
 await shoot("marioclock-1435.png", marioProgram, new Date(2026, 9, 16, 14, 35, 8), 138, 0, marioFiles, "marioclock.png");
 await shoot("gameoflifegame-1435.png", lifeProgram, new Date(2026, 9, 16, 14, 35, 8), 40, 0, lifeFiles, "gameoflifegame.png");
 await shoot("dancemonkey-1435.png", danceProgram, new Date(2026, 9, 16, 14, 35, 8), 16, 0, danceFiles, "dancemonkey.png");
+await shoot("rexie-1435.png", rexieProgram, new Date(2026, 9, 16, 14, 35, 8), 20, 0, rexieFiles, "rexie.png");
