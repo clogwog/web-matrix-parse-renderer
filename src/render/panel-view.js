@@ -1,4 +1,4 @@
-import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedColor } from "./display.js?v=20261026";
+import { DEFAULT_DISPLAY_BRIGHTNESS, encodeLedColor } from "./display.js?v=20261027";
 
 export class PanelView
 {

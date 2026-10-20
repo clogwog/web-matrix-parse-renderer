@@ -1,4 +1,4 @@
-import { withAssetVersion } from "../../version.js?v=20261026";
+import { withAssetVersion } from "../../version.js?v=20261027";
 
 const FILES = [
     "sources/dancemonkey.cpp",

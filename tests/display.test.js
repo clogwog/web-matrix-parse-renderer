@@ -32,6 +32,18 @@ test("mixed colours keep the panel CIE hue while the peak channel still lifts", 
     // Daytime Brent skin is 0.2 * (232, 224, 184) = (46, 44, 36). A per-channel
     // lift paints that (142, 140, 131). CIE1931 at the same peak stays tan.
     assert.deepEqual(encodeLedColor(46, 44, 36, 140), [142, 138, 119]);
+    // Rexie stores anti-aliased dust such as (1,1,1) and (0,0,1). CIE PWM
+    // leaves those off, so the lift must not paint them grey or blue.
+    assert.deepEqual(encodeLedColor(1, 1, 1, 140), [0, 0, 0]);
+    assert.deepEqual(encodeLedColor(0, 0, 1, 140), [0, 0, 0]);
+    assert.deepEqual(encodeLedColor(2, 2, 3, 140), [0, 0, 0]);
+    assert.deepEqual(encodeLedColor(8, 8, 8, 140), [0, 0, 0]);
+    const fringe = encodeLedColor(8, 8, 9, 140);
+    assert.ok(fringe[2] > 0);
+    assert.ok(Math.abs(fringe[0] - fringe[2]) < 24, fringe.join(","));
+    assert.ok(Math.abs(fringe[1] - fringe[2]) < 24, fringe.join(","));
+    assert.deepEqual(encodeLedColor(34, 34, 34, 140), [128, 128, 128]);
+    assert.deepEqual(encodeLedColor(10, 10, 10, 140), [84, 84, 84]);
     const tan = encodeLedColor(43, 40, 30, 140);
     const washed = [encodeLedChannel(43, 140), encodeLedChannel(40, 140), encodeLedChannel(30, 140)];
     assert.ok(tan[0] - tan[2] > washed[0] - washed[2]);

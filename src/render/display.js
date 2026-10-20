@@ -32,12 +32,21 @@ export function encodeLedChannel(value, amount)
 // brightness stays put. The other channels keep the panel's CIE ratios.
 export function encodeLedColor(r, g, b, amount)
 {
-    const raw = [clampChannel(r), clampChannel(g), clampChannel(b)];
+    const source = [clampChannel(r), clampChannel(g), clampChannel(b)];
     const mix = clampAmount(amount);
-    if (mix <= 0 || (raw[0] === 0 && raw[1] === 0 && raw[2] === 0))
+    if (mix <= 0)
     {
-        return raw;
+        return source;
     }
+    // 11-bit CIE PWM below 8/2047 is dark on the panel. Lifting that dust
+    // fills Rexie's black outline. The floor is the brightest channel: zeroing
+    // only the dimmer ones turns a near-grey (8,8,9) into a blue speck.
+    const peakRaw = Math.max(source[0], source[1], source[2]);
+    if (peakRaw !== 0 && peakRaw !== 255 && cieLinear(peakRaw) * 2047 < 8)
+    {
+        return [0, 0, 0];
+    }
+    const raw = source;
     const peak = Math.max(raw[0], raw[1], raw[2]);
     const shownPeak = encodeLedChannel(peak, mix);
     const linear = [cieLinear(raw[0]), cieLinear(raw[1]), cieLinear(raw[2])];
